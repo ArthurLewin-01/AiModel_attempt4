@@ -1,3 +1,5 @@
+// Elements
+
 const chatContainer =
 document.getElementById("chatContainer");
 
@@ -14,15 +16,35 @@ const chatHistoryDiv =
 document.getElementById("chatHistory");
 
 
-// Load saved chats
+// Load chats from storage
 
 let chats =
 JSON.parse(localStorage.getItem("chats")) || [];
 
 let currentChat = [];
 
-let chatNumber =
-chats.length + 1;
+
+// Fake AI Replies
+
+function getReply() {
+
+const replies = [
+
+"That's interesting!",
+"I understand.",
+"Tell me more.",
+"Nice question!",
+"Good idea!",
+"Cool!",
+"Can you explain more?"
+
+];
+
+return replies[
+Math.floor(Math.random() * replies.length)
+];
+
+}
 
 
 // Send Message
@@ -35,12 +57,12 @@ messageInput.value.trim();
 if (!text) return;
 
 
-// Add user message
+// Show user message
 
 addMessage(text, "user");
 
 currentChat.push({
-text,
+text: text,
 sender: "user"
 });
 
@@ -51,7 +73,8 @@ messageInput.value = "";
 
 setTimeout(() => {
 
-const reply = randomReply();
+const reply =
+getReply();
 
 addMessage(reply, "ai");
 
@@ -65,29 +88,7 @@ sender: "ai"
 }
 
 
-// Random Reply
-
-function randomReply() {
-
-const replies = [
-
-"That's interesting!",
-"I understand.",
-"Tell me more.",
-"Nice question!",
-"Good idea!",
-"Cool!"
-
-];
-
-return replies[
-Math.floor(Math.random() * replies.length)
-];
-
-}
-
-
-// Add Message UI
+// Add message to UI
 
 function addMessage(text, sender) {
 
@@ -126,18 +127,27 @@ chatContainer.scrollHeight;
 }
 
 
-// Save Chat
+// Save current chat
 
-function saveConversation() {
+function saveCurrentChat() {
 
 if (currentChat.length === 0) return;
 
-chats.push({
-id: "c" + chatNumber,
-messages: [...currentChat]
-});
 
-chatNumber++;
+// Chat title from first message
+
+let title =
+currentChat[0]?.text
+?.substring(0, 20) || "New Chat";
+
+
+chats.push({
+
+title: title,
+
+messages: [...currentChat]
+
+});
 
 localStorage.setItem(
 "chats",
@@ -151,18 +161,18 @@ renderHistory();
 
 // New Chat
 
-newChatBtn.onclick = () => {
+newChatBtn.addEventListener("click", () => {
 
-saveConversation();
+saveCurrentChat();
 
 currentChat = [];
 
 chatContainer.innerHTML = "";
 
-};
+});
 
 
-// Render History
+// Render chat history
 
 function renderHistory() {
 
@@ -177,13 +187,13 @@ row.className =
 "flex justify-between items-center p-3 bg-white/10 rounded-lg hover:bg-white/20";
 
 
-// Title
+// Chat title
 
 const title =
 document.createElement("span");
 
 title.innerText =
-chat.id;
+chat.title;
 
 title.className =
 "cursor-pointer";
@@ -195,7 +205,7 @@ loadChat(index);
 };
 
 
-// Delete Button
+// Delete button
 
 const deleteBtn =
 document.createElement("button");
@@ -213,6 +223,8 @@ deleteChat(index);
 };
 
 
+// Append
+
 row.appendChild(title);
 row.appendChild(deleteBtn);
 
@@ -223,14 +235,14 @@ chatHistoryDiv.appendChild(row);
 }
 
 
-// Load Chat
+// Load old chat
 
 function loadChat(index) {
 
 chatContainer.innerHTML = "";
 
 currentChat =
-chats[index].messages;
+[...chats[index].messages];
 
 currentChat.forEach(msg => {
 
@@ -244,7 +256,7 @@ msg.sender
 }
 
 
-// Delete Chat
+// Delete chat
 
 function deleteChat(index) {
 
@@ -262,7 +274,10 @@ renderHistory();
 
 // Send button
 
-sendBtn.onclick = sendMessage;
+sendBtn.addEventListener(
+"click",
+sendMessage
+);
 
 
 // Enter key
@@ -281,6 +296,6 @@ sendMessage();
 );
 
 
-// Load history on start
+// Load history at start
 
 renderHistory();
