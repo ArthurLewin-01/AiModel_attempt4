@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -23,15 +24,6 @@ from { opacity:0; transform: translateY(10px); }
 to { opacity:1; transform: translateY(0); }
 }
 
-::-webkit-scrollbar {
-width:6px;
-}
-
-::-webkit-scrollbar-thumb {
-background:#888;
-border-radius:10px;
-}
-
 </style>
 
 </head>
@@ -42,9 +34,7 @@ border-radius:10px;
 
 <div class="w-[260px] bg-white/10 backdrop-blur-md border-r border-white/20 flex flex-col">
 
-<!-- NEW CHAT -->
-
-<div class="p-4 border-b border-white/20">
+<div class="p-4 border-b border-white/20 space-y-3">
 
 <button id="newChatBtn"
 class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
@@ -54,9 +44,15 @@ New Chat
 
 </button>
 
-</div>
+<button id="loginBtn"
+class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
-<!-- CHAT LIST -->
+<i class="fab fa-google mr-2"></i>
+Login (Demo)
+
+</button>
+
+</div>
 
 <div id="chatList"
 class="flex-1 overflow-y-auto p-3 space-y-2">
@@ -65,11 +61,9 @@ class="flex-1 overflow-y-auto p-3 space-y-2">
 
 </div>
 
-<!-- CHAT AREA -->
+<!-- MAIN -->
 
 <div class="flex-1 flex flex-col">
-
-<!-- TOP BAR -->
 
 <div class="p-4 border-b border-white/20 bg-white/5">
 
@@ -82,14 +76,10 @@ New Chat
 
 </div>
 
-<!-- MESSAGES -->
-
 <div id="messages"
 class="flex-1 overflow-y-auto p-6 space-y-4">
 
 </div>
-
-<!-- INPUT -->
 
 <div class="p-4 border-t border-white/20 bg-white/5">
 
@@ -99,7 +89,7 @@ class="flex-1 overflow-y-auto p-6 space-y-4">
 id="messageInput"
 rows="1"
 placeholder="Send a message..."
-class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none focus:outline-none"></textarea>
+class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none"></textarea>
 
 <button
 id="sendBtn"
@@ -117,26 +107,43 @@ class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 <script>
 
-/* =========================
-DATA STORAGE
-========================= */
+/* LOGIN MODE */
 
-let chats =
+let loggedIn =
+localStorage.getItem("loggedIn") === "true";
+
+
+/* LOAD CHATS */
+
+let chats = [];
+
+if (loggedIn) {
+
+chats =
 JSON.parse(localStorage.getItem("chats")) || [];
+
+}
+
+
+/* REMOVE UNDEFINED */
+
+chats =
+chats.filter(c => c && c.messages);
+
+
+/* ACTIVE CHAT */
 
 let activeChatId = null;
 
 
-/* =========================
-CREATE CHAT
-========================= */
+/* CREATE CHAT */
 
 function createNewChat() {
 
 const id =
 Date.now().toString();
 
-const newChat = {
+const chat = {
 
 id,
 
@@ -146,7 +153,7 @@ messages: []
 
 };
 
-chats.unshift(newChat);
+chats.unshift(chat);
 
 activeChatId = id;
 
@@ -159,11 +166,11 @@ renderMessages();
 }
 
 
-/* =========================
-SAVE
-========================= */
+/* SAVE */
 
 function saveChats() {
+
+if (loggedIn) {
 
 localStorage.setItem(
 "chats",
@@ -172,10 +179,28 @@ JSON.stringify(chats)
 
 }
 
+}
 
-/* =========================
-RENDER CHAT LIST
-========================= */
+
+/* LOGIN BUTTON */
+
+document
+.getElementById("loginBtn")
+.onclick = () => {
+
+loggedIn = true;
+
+localStorage.setItem(
+"loggedIn",
+"true"
+);
+
+alert("Logged in! Chats will now be saved.");
+
+};
+
+
+/* RENDER SIDEBAR */
 
 function renderChatList() {
 
@@ -201,16 +226,13 @@ item.classList.add(
 }
 
 
-// TITLE
+/* TITLE */
 
 const title =
 document.createElement("span");
 
 title.innerText =
-chat.title;
-
-
-// CLICK LOAD
+chat.title || "New Chat";
 
 title.onclick = () => {
 
@@ -224,7 +246,7 @@ renderMessages();
 };
 
 
-// MENU
+/* MENU */
 
 const menu =
 document.createElement("button");
@@ -232,7 +254,7 @@ document.createElement("button");
 menu.innerHTML =
 "<i class='fas fa-ellipsis-v'></i>";
 
-menu.onclick = (e) => {
+menu.onclick = e => {
 
 e.stopPropagation();
 
@@ -251,19 +273,32 @@ list.appendChild(item);
 }
 
 
-/* =========================
-MENU
-========================= */
+/* MENU UI */
 
 function showMenu(chatId) {
 
-const action =
-prompt("Type: rename / delete");
+const menuBox =
+document.createElement("div");
 
-if (action === "rename") {
+menuBox.className =
+"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
+
+
+/* RENAME */
+
+const renameBtn =
+document.createElement("button");
+
+renameBtn.innerText =
+"Rename";
+
+renameBtn.className =
+"block w-full text-left hover:text-blue-400";
+
+renameBtn.onclick = () => {
 
 const newName =
-prompt("New chat name:");
+prompt("New name:");
 
 if (newName) {
 
@@ -278,42 +313,53 @@ renderChatList();
 
 }
 
-}
+menuBox.remove();
 
-if (action === "delete") {
+};
 
-if (confirm("Delete chat?")) {
+
+/* DELETE */
+
+const deleteBtn =
+document.createElement("button");
+
+deleteBtn.innerText =
+"Delete";
+
+deleteBtn.className =
+"block w-full text-left hover:text-red-400";
+
+deleteBtn.onclick = () => {
 
 chats =
 chats.filter(c => c.id !== chatId);
 
 saveChats();
 
-if (chats.length) {
-
-activeChatId =
-chats[0].id;
-
-} else {
-
-createNewChat();
-
-}
-
 renderChatList();
 
 renderMessages();
 
-}
+menuBox.remove();
+
+};
+
+
+menuBox.appendChild(renameBtn);
+menuBox.appendChild(deleteBtn);
+
+document.body.appendChild(menuBox);
+
+setTimeout(() => {
+
+menuBox.remove();
+
+}, 3000);
 
 }
 
-}
 
-
-/* =========================
-RENDER MESSAGES
-========================= */
+/* RENDER MESSAGES */
 
 function renderMessages() {
 
@@ -329,7 +375,6 @@ c => c.id === activeChatId
 
 if (!chat) return;
 
-
 chat.messages.forEach(msg => {
 
 addMessageToUI(
@@ -339,15 +384,12 @@ msg.content
 
 });
 
-
 scrollBottom();
 
 }
 
 
-/* =========================
-SEND MESSAGE
-========================= */
+/* SEND */
 
 function sendMessage() {
 
@@ -359,14 +401,13 @@ input.value.trim();
 
 if (!text) return;
 
-
 const chat =
 chats.find(
 c => c.id === activeChatId
 );
 
 
-// USER MSG
+/* USER */
 
 chat.messages.push({
 
@@ -376,16 +417,15 @@ content: text
 
 });
 
-
 if (chat.messages.length === 1) {
 
 chat.title =
-text.substring(0, 20);
+text.substring(0,20);
 
 }
 
 
-// UI
+/* UI */
 
 addMessageToUI(
 "user",
@@ -397,21 +437,7 @@ input.value = "";
 scrollBottom();
 
 
-// AI typing
-
-setTimeout(() => {
-
-addMessageToUI(
-"assistant",
-"AI is typing..."
-);
-
-scrollBottom();
-
-}, 400);
-
-
-// AI reply
+/* AI */
 
 setTimeout(() => {
 
@@ -420,7 +446,7 @@ const reply =
 
 chat.messages.push({
 
-role: "assistant",
+role:"assistant",
 
 content: reply
 
@@ -430,14 +456,12 @@ renderMessages();
 
 saveChats();
 
-}, 1200);
+}, 800);
 
 }
 
 
-/* =========================
-ADD MESSAGE UI
-========================= */
+/* UI MSG */
 
 function addMessageToUI(role,text) {
 
@@ -478,9 +502,7 @@ container.appendChild(msg);
 }
 
 
-/* =========================
-SCROLL
-========================= */
+/* SCROLL */
 
 function scrollBottom() {
 
@@ -493,9 +515,7 @@ container.scrollHeight;
 }
 
 
-/* =========================
-EVENTS
-========================= */
+/* EVENTS */
 
 document
 .getElementById("newChatBtn")
@@ -523,9 +543,7 @@ sendMessage();
 );
 
 
-/* =========================
-INIT
-========================= */
+/* INIT */
 
 if (chats.length === 0) {
 
