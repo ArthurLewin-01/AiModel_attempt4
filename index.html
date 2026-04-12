@@ -20,30 +20,6 @@ body {
 font-family: 'Inter', sans-serif;
 }
 
-.chat-bubble {
-animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-from {
-opacity: 0;
-transform: translateY(10px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-
-.sidebar {
-transform: translateX(-100%);
-transition: transform 0.3s ease;
-}
-
-.sidebar.open {
-transform: translateX(0);
-}
-
 </style>
 
 </head>
@@ -74,12 +50,16 @@ AI Companion Chat
 
 <div class="flex items-center space-x-4">
 
-<button id="sidebarToggle"
-class="p-2 hover:bg-white/10 rounded-lg">
+<!-- LinkedIn Button Restored -->
 
-<i class="fas fa-bars text-xl"></i>
+<a href="https://www.linkedin.com/in/abdul-tofik-00848b402/"
+target="_blank"
+class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:opacity-90 rounded-xl flex items-center space-x-2">
 
-</button>
+<i class="fab fa-linkedin"></i>
+<span>Thanks to Abdul Tofik</span>
+
+</a>
 
 </div>
 
@@ -87,35 +67,11 @@ class="p-2 hover:bg-white/10 rounded-lg">
 
 </header>
 
-<div class="flex h-screen overflow-hidden">
+<!-- Main -->
 
-<!-- Sidebar -->
+<div class="flex flex-col items-center justify-center text-center p-8 h-screen">
 
-<div id="sidebar"
-class="sidebar w-80 bg-white/5 backdrop-blur-md border-r border-white/10 p-6">
-
-<h2 class="text-xl font-bold mb-6">
-
-Chat History
-
-</h2>
-
-<button id="newChatBtn"
-class="px-4 py-2 bg-white/10 rounded-xl w-full">
-
-New Chat
-
-</button>
-
-</div>
-
-<!-- Main Content -->
-
-<div class="flex-1 flex flex-col">
-
-<div class="flex-1 flex flex-col items-center justify-center p-8 text-center">
-
-<div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+<div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mb-6 shadow-2xl">
 
 <i class="fas fa-robot text-3xl text-white"></i>
 
@@ -127,18 +83,14 @@ AI Companion Chat
 
 </h2>
 
-<p class="text-gray-300 mb-8 max-w-2xl mx-auto">
+<p class="text-gray-300 mb-8 max-w-2xl">
 
 Talk to anyone - real, fictional, or create your custom AI companion!
 
 </p>
 
-<div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-
-<!-- QUICK CHAT BUTTON -->
-
 <button id="quickChatBtn"
-class="group p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+class="group p-8 bg-white/5 border border-white/10 rounded-2xl hover:scale-105 transition-all">
 
 <i class="fas fa-comments text-3xl text-blue-400 mb-4"></i>
 
@@ -156,107 +108,16 @@ Normal AI conversation
 
 </button>
 
-<!-- COMPANION BUTTON -->
-
-<button id="companionBtn"
-class="group p-8 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-md border border-purple-500/30 rounded-2xl hover:scale-105">
-
-<i class="fas fa-video text-3xl text-purple-300 mb-4"></i>
-
-<h3 class="text-xl font-bold mb-2">
-
-AI Companion
-
-</h3>
-
-<p class="text-gray-200">
-
-Video call with custom AI
-
-</p>
-
-</button>
-
 </div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- SCRIPT -->
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
-
-setupEventListeners();
-
-});
-
-function setupEventListeners() {
-
-let sidebarToggle =
-document.getElementById("sidebarToggle");
-
-let sidebar =
-document.getElementById("sidebar");
-
-if (sidebarToggle) {
-
-sidebarToggle.addEventListener("click", function () {
-
-sidebar.classList.toggle("open");
-
-});
-
-}
-
-let newChatBtn =
-document.getElementById("newChatBtn");
-
-if (newChatBtn) {
-
-newChatBtn.addEventListener("click", function () {
-
-location.reload();
-
-});
-
-}
-
-/* ✅ QUICK CHAT FIX */
-
-let quickChatBtn =
-document.getElementById("quickChatBtn");
-
-if (quickChatBtn) {
-
-quickChatBtn.addEventListener("click", function () {
+document.getElementById("quickChatBtn")
+.addEventListener("click", function () {
 
 window.location.href = "quickchat.html";
 
 });
-
-}
-
-/* Companion Demo */
-
-let companionBtn =
-document.getElementById("companionBtn");
-
-if (companionBtn) {
-
-companionBtn.addEventListener("click", function () {
-
-alert("Companion mode coming soon!");
-
-});
-
-}
-
-}
 
 </script>
 
