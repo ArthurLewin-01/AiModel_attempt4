@@ -224,6 +224,7 @@
             loadChatHistory();
         });
 
+        <script>
         function setupEventListeners() {
             // Sidebar toggle
             document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
@@ -232,17 +233,17 @@
             // Modal controls
             document.getElementById('cancelSetup').addEventListener('click', () => {
                 document.getElementById('setupModal').classList.add('hidden');
-            });
+    });
 
-            // Quick chat
-            document.getElementById('quickChatBtn').addEventListener('click', () => {
-                startNormalChat();
-            });
+            // Quick Chat Button -> Open chatbot page
+            document.getElementById("quickChatBtn").addEventListener("click", function () {
+                window.location.href = "quickchat.html";
+    });
 
             // Companion setup
             document.getElementById('companionBtn').addEventListener('click', () => {
                 document.getElementById('setupModal').classList.remove('hidden');
-            });
+    });
 
             // Image upload
             document.getElementById('personImage').addEventListener('change', handleImageUpload);
@@ -251,15 +252,18 @@
             // Voice selection
             document.querySelectorAll('.voice-option').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.voice-option').forEach(b => b.classList.remove('bg-white/20', 'ring-2', 'ring-blue-500'));
+                    document.querySelectorAll('.voice-option').forEach(b =>
+                        b.classList.remove('bg-white/20', 'ring-2', 'ring-blue-500')
+            );
                     e.target.classList.add('bg-white/20', 'ring-2', 'ring-blue-500');
                     aiVoice = e.target.dataset.voice;
-                });
-            });
+        });
+    });
 
             // Form validation
             document.getElementById('startChatBtn').addEventListener('click', startCompanionChat);
-        }
+}
+</script>
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
