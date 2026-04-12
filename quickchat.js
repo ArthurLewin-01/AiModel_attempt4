@@ -2,98 +2,185 @@ const chatContainer = document.getElementById("chatContainer");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
 
-// Random AI replies
+const sidebar =
+document.getElementById("sidebar");
 
-const aiReplies = [
-"That's interesting! Tell me more.",
-"I understand what you're saying.",
-"Can you explain that a bit more?",
-"That's a great question.",
-"I'm thinking about that...",
-"Let's explore that idea together.",
-"Interesting point!",
-"That sounds cool.",
-"Good question! I'll try to help.",
-"Nice! Keep going."
-];
+const sidebarToggle =
+document.getElementById("sidebarToggle");
 
-// Send Message
+const newChatBtn =
+document.getElementById("newChatBtn");
+
+const chatHistoryDiv =
+document.getElementById("chatHistory");
+
+let chats =
+JSON.parse(localStorage.getItem("chats")) || [];
+
+let currentChat = [];
+
+// Sidebar toggle
+
+sidebarToggle.onclick = () => {
+
+sidebar.classList.toggle("open");
+
+};
+
+// Send message
 
 function sendMessage() {
 
-const message = messageInput.value.trim();
+const message =
+messageInput.value.trim();
 
-if (message === "") return;
-
-// Add user message
+if (!message) return;
 
 addMessage(message, "user");
 
-messageInput.value = "";
+currentChat.push({
+text: message,
+sender: "user"
+});
 
-// AI reply delay
+messageInput.value = "";
 
 setTimeout(() => {
 
-const randomReply =
-aiReplies[Math.floor(Math.random() * aiReplies.length)];
+const reply = getReply();
 
-addMessage(randomReply, "ai");
+addMessage(reply, "ai");
+
+currentChat.push({
+text: reply,
+sender: "ai"
+});
+
+saveChat();
 
 }, 700);
 
 }
 
-// Add Message Function
+// Random reply
+
+function getReply() {
+
+const replies = [
+"That's interesting!",
+"I understand.",
+"Tell me more.",
+"Nice question!",
+"Cool!",
+"Good idea!"
+];
+
+return replies[
+Math.floor(Math.random() * replies.length)
+];
+
+}
+
+// Add UI message
 
 function addMessage(text, sender) {
 
-const messageDiv = document.createElement("div");
+const msg =
+document.createElement("div");
 
-messageDiv.classList.add(
+msg.classList.add(
 "chat-bubble",
-"max-w-xl",
 "p-4",
-"rounded-xl"
+"rounded-xl",
+"max-w-xl"
 );
 
 if (sender === "user") {
 
-messageDiv.classList.add(
+msg.classList.add(
 "ml-auto",
-"bg-blue-500",
-"text-white"
+"bg-blue-500"
 );
 
 } else {
 
-messageDiv.classList.add(
+msg.classList.add(
 "bg-white/10"
 );
 
 }
 
-messageDiv.innerText = text;
+msg.innerText = text;
 
-chatContainer.appendChild(messageDiv);
-
-// Auto scroll
+chatContainer.appendChild(msg);
 
 chatContainer.scrollTop =
 chatContainer.scrollHeight;
 
 }
 
-// Button Click
+// Save chat
 
-sendBtn.addEventListener("click", sendMessage);
+function saveChat() {
 
-// Press Enter
+if (currentChat.length === 0) return;
 
-messageInput.addEventListener("keypress", function(e) {
+chats.push([...currentChat]);
 
-if (e.key === "Enter") {
-sendMessage();
+localStorage.setItem(
+"chats",
+JSON.stringify(chats)
+);
+
+renderHistory();
+
 }
 
+// Render history
+
+function renderHistory() {
+
+chatHistoryDiv.innerHTML = "";
+
+chats.forEach((chat, index) => {
+
+const item =
+document.createElement("div");
+
+item.className =
+"p-3 bg-white/10 rounded-lg cursor-pointer";
+
+item.innerText =
+"Chat " + (index + 1);
+
+chatHistoryDiv.appendChild(item);
+
 });
+
+}
+
+// New Chat (no deletion)
+
+newChatBtn.onclick = () => {
+
+currentChat = [];
+
+chatContainer.innerHTML = "";
+
+};
+
+// Send
+
+sendBtn.onclick = sendMessage;
+
+messageInput.addEventListener(
+"keypress",
+e => {
+if (e.key === "Enter")
+sendMessage();
+}
+);
+
+// Load history
+
+renderHistory();
