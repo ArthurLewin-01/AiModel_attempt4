@@ -1,12 +1,11 @@
-const chatContainer = document.getElementById("chatContainer");
-const messageInput = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
+const chatContainer =
+document.getElementById("chatContainer");
 
-const sidebar =
-document.getElementById("sidebar");
+const messageInput =
+document.getElementById("messageInput");
 
-const sidebarToggle =
-document.getElementById("sidebarToggle");
+const sendBtn =
+document.getElementById("sendBtn");
 
 const newChatBtn =
 document.getElementById("newChatBtn");
@@ -14,42 +13,45 @@ document.getElementById("newChatBtn");
 const chatHistoryDiv =
 document.getElementById("chatHistory");
 
+
+// Load saved chats
+
 let chats =
 JSON.parse(localStorage.getItem("chats")) || [];
 
 let currentChat = [];
 
-
-// Sidebar Toggle (Open + Close)
-
-sidebarToggle.onclick = () => {
-
-sidebar.classList.toggle("open");
-
-};
+let chatNumber =
+chats.length + 1;
 
 
 // Send Message
 
 function sendMessage() {
 
-const message =
+const text =
 messageInput.value.trim();
 
-if (!message) return;
+if (!text) return;
 
-addMessage(message, "user");
+
+// Add user message
+
+addMessage(text, "user");
 
 currentChat.push({
-text: message,
+text,
 sender: "user"
 });
 
 messageInput.value = "";
 
+
+// Fake AI reply
+
 setTimeout(() => {
 
-const reply = getReply();
+const reply = randomReply();
 
 addMessage(reply, "ai");
 
@@ -58,22 +60,24 @@ text: reply,
 sender: "ai"
 });
 
-}, 700);
+}, 600);
 
 }
 
 
 // Random Reply
 
-function getReply() {
+function randomReply() {
 
 const replies = [
+
 "That's interesting!",
 "I understand.",
 "Tell me more.",
 "Nice question!",
-"Cool!",
-"Good idea!"
+"Good idea!",
+"Cool!"
+
 ];
 
 return replies[
@@ -83,7 +87,7 @@ Math.floor(Math.random() * replies.length)
 }
 
 
-// Add Message
+// Add Message UI
 
 function addMessage(text, sender) {
 
@@ -122,13 +126,18 @@ chatContainer.scrollHeight;
 }
 
 
-// Save Chat When New Chat Clicked
+// Save Chat
 
-function saveCurrentChat() {
+function saveConversation() {
 
 if (currentChat.length === 0) return;
 
-chats.push([...currentChat]);
+chats.push({
+id: "c" + chatNumber,
+messages: [...currentChat]
+});
+
+chatNumber++;
 
 localStorage.setItem(
 "chats",
@@ -140,7 +149,20 @@ renderHistory();
 }
 
 
-// Render History with Delete
+// New Chat
+
+newChatBtn.onclick = () => {
+
+saveConversation();
+
+currentChat = [];
+
+chatContainer.innerHTML = "";
+
+};
+
+
+// Render History
 
 function renderHistory() {
 
@@ -148,17 +170,20 @@ chatHistoryDiv.innerHTML = "";
 
 chats.forEach((chat, index) => {
 
-const wrapper =
+const row =
 document.createElement("div");
 
-wrapper.className =
-"flex justify-between items-center p-3 bg-white/10 rounded-lg";
+row.className =
+"flex justify-between items-center p-3 bg-white/10 rounded-lg hover:bg-white/20";
+
+
+// Title
 
 const title =
 document.createElement("span");
 
 title.innerText =
-"Chat " + (index + 1);
+chat.id;
 
 title.className =
 "cursor-pointer";
@@ -168,6 +193,9 @@ title.onclick = () => {
 loadChat(index);
 
 };
+
+
+// Delete Button
 
 const deleteBtn =
 document.createElement("button");
@@ -184,10 +212,11 @@ deleteChat(index);
 
 };
 
-wrapper.appendChild(title);
-wrapper.appendChild(deleteBtn);
 
-chatHistoryDiv.appendChild(wrapper);
+row.appendChild(title);
+row.appendChild(deleteBtn);
+
+chatHistoryDiv.appendChild(row);
 
 });
 
@@ -200,7 +229,8 @@ function loadChat(index) {
 
 chatContainer.innerHTML = "";
 
-currentChat = chats[index];
+currentChat =
+chats[index].messages;
 
 currentChat.forEach(msg => {
 
@@ -210,8 +240,6 @@ msg.sender
 );
 
 });
-
-sidebar.classList.remove("open");
 
 }
 
@@ -232,37 +260,27 @@ renderHistory();
 }
 
 
-// New Chat (Save previous first)
-
-newChatBtn.onclick = () => {
-
-saveCurrentChat();
-
-currentChat = [];
-
-chatContainer.innerHTML = "";
-
-sidebar.classList.remove("open");
-
-};
-
-
-// Send Button
+// Send button
 
 sendBtn.onclick = sendMessage;
 
 
-// Enter Key
+// Enter key
 
 messageInput.addEventListener(
 "keypress",
 e => {
-if (e.key === "Enter")
+
+if (e.key === "Enter") {
+
 sendMessage();
+
+}
+
 }
 );
 
 
-// Load History On Start
+// Load history on start
 
 renderHistory();
