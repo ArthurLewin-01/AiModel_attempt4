@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
 <meta charset="UTF-8">
@@ -24,93 +23,87 @@ from { opacity:0; transform: translateY(10px); }
 to { opacity:1; transform: translateY(0); }
 }
 
+::-webkit-scrollbar {
+width:6px;
+}
+
+::-webkit-scrollbar-thumb {
+background:#888;
+border-radius:10px;
+}
+
 </style>
 
 </head>
 
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-screen flex">
 
-<!-- SIDEBAR (FIXED LEFT) -->
+<!-- SIDEBAR -->
 
-<div class="w-72 bg-black/30 backdrop-blur-md border-r border-white/10 flex flex-col">
+<div class="w-[260px] bg-white/10 backdrop-blur-md border-r border-white/20 flex flex-col">
 
-<!-- TOP BUTTONS -->
+<!-- NEW CHAT -->
 
-<div class="p-4 space-y-3 border-b border-white/10">
+<div class="p-4 border-b border-white/20">
 
 <button id="newChatBtn"
-class="w-full p-3 bg-white/10 hover:bg-white/20 rounded-xl">
+class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
 
-➕ New Chat
-
-</button>
-
-<button id="loginBtn"
-class="w-full p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl hover:opacity-90">
-
-<i class="fab fa-google mr-2"></i>
-Login with Google
+<i class="fas fa-plus mr-2"></i>
+New Chat
 
 </button>
 
 </div>
 
-<!-- CHAT HISTORY -->
+<!-- CHAT LIST -->
 
-<div id="chatHistory"
+<div id="chatList"
 class="flex-1 overflow-y-auto p-3 space-y-2">
 
 </div>
 
 </div>
 
-<!-- MAIN CHAT AREA -->
+<!-- CHAT AREA -->
 
 <div class="flex-1 flex flex-col">
 
-<!-- HEADER -->
+<!-- TOP BAR -->
 
-<header class="bg-white/10 border-b border-white/10 p-4 flex justify-between">
+<div class="p-4 border-b border-white/20 bg-white/5">
 
-<h1 class="font-bold text-lg">
+<h1 id="chatTitle"
+class="font-bold text-lg">
 
-Quick Chat
+New Chat
 
 </h1>
 
-<a href="index.html"
-class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg">
+</div>
 
-<i class="fas fa-arrow-left mr-2"></i>
-Back
+<!-- MESSAGES -->
 
-</a>
-
-</header>
-
-<!-- CHAT AREA -->
-
-<div id="chatContainer"
+<div id="messages"
 class="flex-1 overflow-y-auto p-6 space-y-4">
 
 </div>
 
 <!-- INPUT -->
 
-<div class="p-4 border-t border-white/10 bg-white/5">
+<div class="p-4 border-t border-white/20 bg-white/5">
 
 <div class="flex space-x-3">
 
-<input
+<textarea
 id="messageInput"
-type="text"
-placeholder="Ask anything..."
-class="flex-1 p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none"
-/>
+rows="1"
+placeholder="Send a message..."
+class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none focus:outline-none"></textarea>
 
 <button
 id="sendBtn"
-class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl hover:opacity-90">
+class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 <i class="fas fa-paper-plane"></i>
 
@@ -122,8 +115,436 @@ class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl hover:o
 
 </div>
 
-<script src="quickchat.js"></script>
+<script>
+
+/* =========================
+DATA STORAGE
+========================= */
+
+let chats =
+JSON.parse(localStorage.getItem("chats")) || [];
+
+let activeChatId = null;
+
+
+/* =========================
+CREATE CHAT
+========================= */
+
+function createNewChat() {
+
+const id =
+Date.now().toString();
+
+const newChat = {
+
+id,
+
+title: "New Chat",
+
+messages: []
+
+};
+
+chats.unshift(newChat);
+
+activeChatId = id;
+
+saveChats();
+
+renderChatList();
+
+renderMessages();
+
+}
+
+
+/* =========================
+SAVE
+========================= */
+
+function saveChats() {
+
+localStorage.setItem(
+"chats",
+JSON.stringify(chats)
+);
+
+}
+
+
+/* =========================
+RENDER CHAT LIST
+========================= */
+
+function renderChatList() {
+
+const list =
+document.getElementById("chatList");
+
+list.innerHTML = "";
+
+chats.forEach(chat => {
+
+const item =
+document.createElement("div");
+
+item.className =
+"flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+
+if (chat.id === activeChatId) {
+
+item.classList.add(
+"bg-white/20"
+);
+
+}
+
+
+// TITLE
+
+const title =
+document.createElement("span");
+
+title.innerText =
+chat.title;
+
+
+// CLICK LOAD
+
+title.onclick = () => {
+
+activeChatId =
+chat.id;
+
+renderChatList();
+
+renderMessages();
+
+};
+
+
+// MENU
+
+const menu =
+document.createElement("button");
+
+menu.innerHTML =
+"<i class='fas fa-ellipsis-v'></i>";
+
+menu.onclick = (e) => {
+
+e.stopPropagation();
+
+showMenu(chat.id);
+
+};
+
+
+item.appendChild(title);
+item.appendChild(menu);
+
+list.appendChild(item);
+
+});
+
+}
+
+
+/* =========================
+MENU
+========================= */
+
+function showMenu(chatId) {
+
+const action =
+prompt("Type: rename / delete");
+
+if (action === "rename") {
+
+const newName =
+prompt("New chat name:");
+
+if (newName) {
+
+const chat =
+chats.find(c => c.id === chatId);
+
+chat.title = newName;
+
+saveChats();
+
+renderChatList();
+
+}
+
+}
+
+if (action === "delete") {
+
+if (confirm("Delete chat?")) {
+
+chats =
+chats.filter(c => c.id !== chatId);
+
+saveChats();
+
+if (chats.length) {
+
+activeChatId =
+chats[0].id;
+
+} else {
+
+createNewChat();
+
+}
+
+renderChatList();
+
+renderMessages();
+
+}
+
+}
+
+}
+
+
+/* =========================
+RENDER MESSAGES
+========================= */
+
+function renderMessages() {
+
+const container =
+document.getElementById("messages");
+
+container.innerHTML = "";
+
+const chat =
+chats.find(
+c => c.id === activeChatId
+);
+
+if (!chat) return;
+
+
+chat.messages.forEach(msg => {
+
+addMessageToUI(
+msg.role,
+msg.content
+);
+
+});
+
+
+scrollBottom();
+
+}
+
+
+/* =========================
+SEND MESSAGE
+========================= */
+
+function sendMessage() {
+
+const input =
+document.getElementById("messageInput");
+
+const text =
+input.value.trim();
+
+if (!text) return;
+
+
+const chat =
+chats.find(
+c => c.id === activeChatId
+);
+
+
+// USER MSG
+
+chat.messages.push({
+
+role: "user",
+
+content: text
+
+});
+
+
+if (chat.messages.length === 1) {
+
+chat.title =
+text.substring(0, 20);
+
+}
+
+
+// UI
+
+addMessageToUI(
+"user",
+text
+);
+
+input.value = "";
+
+scrollBottom();
+
+
+// AI typing
+
+setTimeout(() => {
+
+addMessageToUI(
+"assistant",
+"AI is typing..."
+);
+
+scrollBottom();
+
+}, 400);
+
+
+// AI reply
+
+setTimeout(() => {
+
+const reply =
+"Hello! This is a demo response.";
+
+chat.messages.push({
+
+role: "assistant",
+
+content: reply
+
+});
+
+renderMessages();
+
+saveChats();
+
+}, 1200);
+
+}
+
+
+/* =========================
+ADD MESSAGE UI
+========================= */
+
+function addMessageToUI(role,text) {
+
+const container =
+document.getElementById("messages");
+
+const msg =
+document.createElement("div");
+
+msg.classList.add(
+"chat-bubble",
+"p-3",
+"rounded-xl",
+"max-w-xl"
+);
+
+if (role === "user") {
+
+msg.classList.add(
+"ml-auto",
+"bg-blue-500"
+);
+
+}
+
+else {
+
+msg.classList.add(
+"bg-white/10"
+);
+
+}
+
+msg.innerText = text;
+
+container.appendChild(msg);
+
+}
+
+
+/* =========================
+SCROLL
+========================= */
+
+function scrollBottom() {
+
+const container =
+document.getElementById("messages");
+
+container.scrollTop =
+container.scrollHeight;
+
+}
+
+
+/* =========================
+EVENTS
+========================= */
+
+document
+.getElementById("newChatBtn")
+.onclick = createNewChat;
+
+document
+.getElementById("sendBtn")
+.onclick = sendMessage;
+
+document
+.getElementById("messageInput")
+.addEventListener(
+"keydown",
+e => {
+
+if (e.key === "Enter" && !e.shiftKey) {
+
+e.preventDefault();
+
+sendMessage();
+
+}
+
+}
+);
+
+
+/* =========================
+INIT
+========================= */
+
+if (chats.length === 0) {
+
+createNewChat();
+
+}
+
+else {
+
+activeChatId =
+chats[0].id;
+
+renderChatList();
+
+renderMessages();
+
+}
+
+</script>
 
 </body>
-
 </html>
