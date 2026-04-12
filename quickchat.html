@@ -13,6 +13,14 @@
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<!-- Firebase -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
 
 .chat-bubble {
@@ -48,9 +56,19 @@ New Chat
 class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 <i class="fab fa-google mr-2"></i>
-Login
+Login with Google
 
 </button>
+
+<button id="logoutBtn"
+class="w-full p-3 rounded-xl bg-red-500 hidden">
+
+Logout
+
+</button>
+
+<div id="userName"
+class="text-sm text-gray-300 text-center"></div>
 
 </div>
 
@@ -107,36 +125,126 @@ class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 <script>
 
-/* LOGIN MODE */
+/* FIREBASE INIT */
 
-let loggedIn =
-localStorage.getItem("loggedIn") === "true";
+const firebaseConfig = {
+apiKey: "AIzaSyCz5H-ad91O0FXsIev5V3ZY6x5TZ6mzr78",
+authDomain: "aimodel-attempt4.firebaseapp.com",
+projectId: "aimodel-attempt4",
+storageBucket: "aimodel-attempt4.firebasestorage.app",
+messagingSenderId: "375459768438",
+appId: "1:375459768438:web:e2a3071225c2bee5225757",
+measurementId: "G-4ZBX0RDG8W"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth =
+firebase.auth();
+
+const db =
+firebase.firestore();
 
 
-/* LOAD CHATS */
+/* AUTH */
 
-let chats = [];
+const loginBtn =
+document.getElementById("loginBtn");
 
-if (loggedIn) {
+const logoutBtn =
+document.getElementById("logoutBtn");
 
-chats =
-JSON.parse(localStorage.getItem("chats")) || [];
+const userNameDiv =
+document.getElementById("userName");
+
+
+loginBtn.onclick = () => {
+
+const provider =
+new firebase.auth.GoogleAuthProvider();
+
+auth.signInWithPopup(provider);
+
+};
+
+
+logoutBtn.onclick = () => {
+
+auth.signOut();
+
+};
+
+
+auth.onAuthStateChanged(user => {
+
+if (user) {
+
+loginBtn.classList.add("hidden");
+logoutBtn.classList.remove("hidden");
+
+userNameDiv.innerText =
+user.displayName;
+
+loadChats(user.uid);
 
 }
 
+else {
 
-/* REMOVE UNDEFINED */
+loginBtn.classList.remove("hidden");
+logoutBtn.classList.add("hidden");
 
-chats =
-chats.filter(c => c && c.messages);
+userNameDiv.innerText = "";
+
+}
+
+});
 
 
-/* ACTIVE CHAT */
+/* CHAT SYSTEM */
 
+let chats = [];
 let activeChatId = null;
+let currentUserId = null;
 
 
-/* CREATE CHAT */
+function loadChats(uid) {
+
+currentUserId = uid;
+
+db.collection("users")
+.doc(uid)
+.collection("chats")
+.get()
+.then(snapshot => {
+
+chats = [];
+
+snapshot.forEach(doc => {
+
+chats.push(doc.data());
+
+});
+
+if (chats.length === 0) {
+
+createNewChat();
+
+}
+
+else {
+
+activeChatId = chats[0].id;
+
+renderChatList();
+renderMessages();
+
+}
+
+});
+
+}
+
 
 function createNewChat() {
 
@@ -146,9 +254,7 @@ Date.now().toString();
 const chat = {
 
 id,
-
 title: "New Chat",
-
 messages: []
 
 };
@@ -160,47 +266,85 @@ activeChatId = id;
 saveChats();
 
 renderChatList();
-
 renderMessages();
 
 }
 
 
-/* SAVE */
-
 function saveChats() {
 
-if (loggedIn) {
+if (!currentUserId) return;
 
-localStorage.setItem(
-"chats",
-JSON.stringify(chats)
-);
+chats.forEach(chat => {
+
+db.collection("users")
+.doc(currentUserId)
+.collection("chats")
+.doc(chat.id)
+.set(chat);
+
+});
 
 }
 
-}
-
-
-/* LOGIN BUTTON */
 
 document
-.getElementById("loginBtn")
-.onclick = () => {
-
-loggedIn = true;
-
-localStorage.setItem(
-"loggedIn",
-"true"
-);
-
-alert("Logged in! Chats will now be saved.");
-
-};
+.getElementById("newChatBtn")
+.onclick = createNewChat;
 
 
-/* RENDER SIDEBAR */
+/* MESSAGE */
+
+function sendMessage() {
+
+const input =
+document.getElementById("messageInput");
+
+const text =
+input.value.trim();
+
+if (!text) return;
+
+const chat =
+chats.find(c => c.id === activeChatId);
+
+chat.messages.push({
+role:"user",
+content:text
+});
+
+if (chat.messages.length === 1) {
+
+chat.title =
+text.substring(0,20);
+
+}
+
+input.value = "";
+
+renderMessages();
+
+setTimeout(() => {
+
+chat.messages.push({
+role:"assistant",
+content:"Hello! This is a demo response."
+});
+
+renderMessages();
+saveChats();
+
+},800);
+
+}
+
+
+document
+.getElementById("sendBtn")
+.onclick = sendMessage;
+
+
+/* UI */
 
 function renderChatList() {
 
@@ -215,56 +359,18 @@ const item =
 document.createElement("div");
 
 item.className =
-"flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+"p-3 rounded-lg hover:bg-white/20 cursor-pointer";
 
-if (chat.id === activeChatId) {
+item.innerText =
+chat.title;
 
-item.classList.add(
-"bg-white/20"
-);
+item.onclick = () => {
 
-}
-
-
-/* TITLE */
-
-const title =
-document.createElement("span");
-
-title.innerText =
-chat.title || "New Chat";
-
-title.onclick = () => {
-
-activeChatId =
-chat.id;
-
-renderChatList();
+activeChatId = chat.id;
 
 renderMessages();
 
 };
-
-
-/* MENU */
-
-const menu =
-document.createElement("button");
-
-menu.innerHTML =
-"<i class='fas fa-ellipsis-v'></i>";
-
-menu.onclick = e => {
-
-e.stopPropagation();
-
-showMenu(chat.id);
-
-};
-
-
-item.appendChild(title);
-item.appendChild(menu);
 
 list.appendChild(item);
 
@@ -272,94 +378,6 @@ list.appendChild(item);
 
 }
 
-
-/* MENU UI */
-
-function showMenu(chatId) {
-
-const menuBox =
-document.createElement("div");
-
-menuBox.className =
-"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
-
-
-/* RENAME */
-
-const renameBtn =
-document.createElement("button");
-
-renameBtn.innerText =
-"Rename";
-
-renameBtn.className =
-"block w-full text-left hover:text-blue-400";
-
-renameBtn.onclick = () => {
-
-const newName =
-prompt("New name:");
-
-if (newName) {
-
-const chat =
-chats.find(c => c.id === chatId);
-
-chat.title = newName;
-
-saveChats();
-
-renderChatList();
-
-}
-
-menuBox.remove();
-
-};
-
-
-/* DELETE */
-
-const deleteBtn =
-document.createElement("button");
-
-deleteBtn.innerText =
-"Delete";
-
-deleteBtn.className =
-"block w-full text-left hover:text-red-400";
-
-deleteBtn.onclick = () => {
-
-chats =
-chats.filter(c => c.id !== chatId);
-
-saveChats();
-
-renderChatList();
-
-renderMessages();
-
-menuBox.remove();
-
-};
-
-
-menuBox.appendChild(renameBtn);
-menuBox.appendChild(deleteBtn);
-
-document.body.appendChild(menuBox);
-
-setTimeout(() => {
-
-menuBox.remove();
-
-}, 3000);
-
-}
-
-
-/* RENDER MESSAGES */
 
 function renderMessages() {
 
@@ -377,110 +395,18 @@ if (!chat) return;
 
 chat.messages.forEach(msg => {
 
-addMessageToUI(
-msg.role,
-msg.content
-);
-
-});
-
-scrollBottom();
-
-}
-
-
-/* SEND */
-
-function sendMessage() {
-
-const input =
-document.getElementById("messageInput");
-
-const text =
-input.value.trim();
-
-if (!text) return;
-
-const chat =
-chats.find(
-c => c.id === activeChatId
-);
-
-
-/* USER */
-
-chat.messages.push({
-
-role: "user",
-
-content: text
-
-});
-
-if (chat.messages.length === 1) {
-
-chat.title =
-text.substring(0,20);
-
-}
-
-
-/* UI */
-
-addMessageToUI(
-"user",
-text
-);
-
-input.value = "";
-
-scrollBottom();
-
-
-/* AI */
-
-setTimeout(() => {
-
-const reply =
-"Hello! This is a demo response.";
-
-chat.messages.push({
-
-role:"assistant",
-
-content: reply
-
-});
-
-renderMessages();
-
-saveChats();
-
-}, 800);
-
-}
-
-
-/* UI MSG */
-
-function addMessageToUI(role,text) {
-
-const container =
-document.getElementById("messages");
-
-const msg =
+const div =
 document.createElement("div");
 
-msg.classList.add(
-"chat-bubble",
+div.classList.add(
 "p-3",
 "rounded-xl",
 "max-w-xl"
 );
 
-if (role === "user") {
+if (msg.role === "user") {
 
-msg.classList.add(
+div.classList.add(
 "ml-auto",
 "bg-blue-500"
 );
@@ -489,76 +415,21 @@ msg.classList.add(
 
 else {
 
-msg.classList.add(
+div.classList.add(
 "bg-white/10"
 );
 
 }
 
-msg.innerText = text;
+div.innerText =
+msg.content;
 
-container.appendChild(msg);
+container.appendChild(div);
 
-}
-
-
-/* SCROLL */
-
-function scrollBottom() {
-
-const container =
-document.getElementById("messages");
+});
 
 container.scrollTop =
 container.scrollHeight;
-
-}
-
-
-/* EVENTS */
-
-document
-.getElementById("newChatBtn")
-.onclick = createNewChat;
-
-document
-.getElementById("sendBtn")
-.onclick = sendMessage;
-
-document
-.getElementById("messageInput")
-.addEventListener(
-"keydown",
-e => {
-
-if (e.key === "Enter" && !e.shiftKey) {
-
-e.preventDefault();
-
-sendMessage();
-
-}
-
-}
-);
-
-
-/* INIT */
-
-if (chats.length === 0) {
-
-createNewChat();
-
-}
-
-else {
-
-activeChatId =
-chats[0].id;
-
-renderChatList();
-
-renderMessages();
 
 }
 
