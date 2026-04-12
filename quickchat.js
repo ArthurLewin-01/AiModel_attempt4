@@ -19,7 +19,8 @@ JSON.parse(localStorage.getItem("chats")) || [];
 
 let currentChat = [];
 
-// Sidebar toggle
+
+// Sidebar Toggle (Open + Close)
 
 sidebarToggle.onclick = () => {
 
@@ -27,7 +28,8 @@ sidebar.classList.toggle("open");
 
 };
 
-// Send message
+
+// Send Message
 
 function sendMessage() {
 
@@ -56,13 +58,12 @@ text: reply,
 sender: "ai"
 });
 
-saveChat();
-
 }, 700);
 
 }
 
-// Random reply
+
+// Random Reply
 
 function getReply() {
 
@@ -81,7 +82,8 @@ Math.floor(Math.random() * replies.length)
 
 }
 
-// Add UI message
+
+// Add Message
 
 function addMessage(text, sender) {
 
@@ -119,9 +121,10 @@ chatContainer.scrollHeight;
 
 }
 
-// Save chat
 
-function saveChat() {
+// Save Chat When New Chat Clicked
+
+function saveCurrentChat() {
 
 if (currentChat.length === 0) return;
 
@@ -136,7 +139,8 @@ renderHistory();
 
 }
 
-// Render history
+
+// Render History with Delete
 
 function renderHistory() {
 
@@ -144,34 +148,111 @@ chatHistoryDiv.innerHTML = "";
 
 chats.forEach((chat, index) => {
 
-const item =
+const wrapper =
 document.createElement("div");
 
-item.className =
-"p-3 bg-white/10 rounded-lg cursor-pointer";
+wrapper.className =
+"flex justify-between items-center p-3 bg-white/10 rounded-lg";
 
-item.innerText =
+const title =
+document.createElement("span");
+
+title.innerText =
 "Chat " + (index + 1);
 
-chatHistoryDiv.appendChild(item);
+title.className =
+"cursor-pointer";
+
+title.onclick = () => {
+
+loadChat(index);
+
+};
+
+const deleteBtn =
+document.createElement("button");
+
+deleteBtn.innerHTML =
+"<i class='fas fa-trash'></i>";
+
+deleteBtn.className =
+"text-red-400 hover:text-red-300";
+
+deleteBtn.onclick = () => {
+
+deleteChat(index);
+
+};
+
+wrapper.appendChild(title);
+wrapper.appendChild(deleteBtn);
+
+chatHistoryDiv.appendChild(wrapper);
 
 });
 
 }
 
-// New Chat (no deletion)
+
+// Load Chat
+
+function loadChat(index) {
+
+chatContainer.innerHTML = "";
+
+currentChat = chats[index];
+
+currentChat.forEach(msg => {
+
+addMessage(
+msg.text,
+msg.sender
+);
+
+});
+
+sidebar.classList.remove("open");
+
+}
+
+
+// Delete Chat
+
+function deleteChat(index) {
+
+chats.splice(index, 1);
+
+localStorage.setItem(
+"chats",
+JSON.stringify(chats)
+);
+
+renderHistory();
+
+}
+
+
+// New Chat (Save previous first)
 
 newChatBtn.onclick = () => {
+
+saveCurrentChat();
 
 currentChat = [];
 
 chatContainer.innerHTML = "";
 
+sidebar.classList.remove("open");
+
 };
 
-// Send
+
+// Send Button
 
 sendBtn.onclick = sendMessage;
+
+
+// Enter Key
 
 messageInput.addEventListener(
 "keypress",
@@ -181,6 +262,7 @@ sendMessage();
 }
 );
 
-// Load history
+
+// Load History On Start
 
 renderHistory();
