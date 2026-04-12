@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -12,8 +14,14 @@
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-body {
-font-family: 'Inter', sans-serif;
+
+.sidebar {
+transform: translateX(-100%);
+transition: transform 0.3s ease;
+}
+
+.sidebar.open {
+transform: translateX(0);
 }
 
 .chat-bubble {
@@ -24,67 +32,84 @@ animation: fadeIn 0.25s ease;
 from { opacity:0; transform: translateY(10px); }
 to { opacity:1; transform: translateY(0); }
 }
+
 </style>
 
 </head>
 
-<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white flex flex-col">
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white flex">
 
-<!-- TOP BAR (Screenshot 2 style) -->
+<!-- SIDEBAR -->
 
-<header class="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+<div id="sidebar"
+class="sidebar fixed w-80 h-full bg-white/5 backdrop-blur-md border-r border-white/10 p-6 z-50">
 
-<div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+<div class="flex justify-between mb-6">
 
-<div class="flex items-center space-x-3">
+<h2 class="text-xl font-bold">
 
-<div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+Chat History
 
-<i class="fas fa-robot text-white"></i>
+</h2>
+
+<button id="newChatBtn"
+class="px-3 py-1 bg-white/10 rounded-lg">
+
+New Chat
+
+</button>
 
 </div>
 
-<h1 class="text-xl font-bold">
-AI Companion Chat
-</h1>
+<div id="chatHistory"
+class="space-y-2 overflow-y-auto max-h-[80vh]">
 
 </div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="flex-1 flex flex-col w-full">
+
+<header class="bg-white/10 border-b border-white/20 p-4 flex justify-between items-center">
+
+<button id="sidebarToggle"
+class="p-2 hover:bg-white/10 rounded-lg">
+
+<i class="fas fa-bars"></i>
+
+</button>
 
 <a href="index.html"
-class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg">
+class="px-4 py-2 bg-white/10 rounded-lg">
+
 <i class="fas fa-arrow-left mr-2"></i>
 Back
+
 </a>
 
-</div>
-
 </header>
-
-<!-- CHAT AREA -->
 
 <div id="chatContainer"
 class="flex-1 overflow-y-auto p-6 space-y-4">
 
-<!-- Messages appear here -->
-
 </div>
-
-<!-- INPUT BAR -->
 
 <div class="p-4 border-t border-white/10 bg-white/5">
 
-<div class="max-w-4xl mx-auto flex space-x-3">
+<div class="flex space-x-3">
 
 <input
 id="messageInput"
 type="text"
 placeholder="Ask anything..."
-class="flex-1 p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+class="flex-1 p-4 bg-white/10 border border-white/20 rounded-xl text-white"
 />
 
 <button
 id="sendBtn"
-class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl hover:opacity-90">
+class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
 
 <i class="fas fa-paper-plane"></i>
 
@@ -94,7 +119,10 @@ class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl hover:o
 
 </div>
 
+</div>
+
 <script src="quickchat.js"></script>
 
 </body>
+
 </html>
