@@ -1,170 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Quick Chat</title>
+<title>Quick Chat AI</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <!-- Firebase -->
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-
-.chat-bubble {
-animation: fadeIn 0.25s ease;
-}
-
+.chat-bubble { animation: fadeIn 0.2s ease; }
 @keyframes fadeIn {
-from { opacity:0; transform: translateY(10px); }
-to { opacity:1; transform: translateY(0); }
+from {opacity:0; transform:translateY(10px);}
+to {opacity:1; transform:translateY(0);}
 }
-
 </style>
-
 </head>
 
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-screen flex">
 
 <!-- SIDEBAR -->
+<div class="w-[260px] bg-white/10 border-r border-white/20 flex flex-col">
 
-<div class="w-[260px] bg-white/10 backdrop-blur-md border-r border-white/20 flex flex-col">
+<div class="p-3 space-y-2 border-b border-white/20">
 
-<div class="p-4 border-b border-white/20 space-y-3">
-
-<button id="newChatBtn"
-class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
-
-<i class="fas fa-plus mr-2"></i>
-New Chat
-
+<button id="newChatBtn" class="w-full p-2 rounded bg-white/10 hover:bg-white/20">
+<i class="fas fa-plus"></i> New Chat
 </button>
 
-<button id="loginBtn"
-class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-
-<i class="fab fa-google mr-2"></i>
-Login with Google
-
+<button id="loginBtn" class="w-full p-2 rounded bg-blue-500">
+<i class="fab fa-google"></i> Login
 </button>
 
-<button id="logoutBtn"
-class="w-full p-3 rounded-xl bg-red-500 hidden">
-
+<button id="logoutBtn" class="w-full p-2 rounded bg-red-500 hidden">
 Logout
-
 </button>
 
-<div id="userName"
-class="text-sm text-gray-300 text-center"></div>
+<input id="searchInput" placeholder="Search chats..."
+class="w-full p-2 mt-2 rounded bg-white/10">
 
 </div>
 
-<!-- SEARCH -->
-
-<input
-id="searchInput"
-type="text"
-placeholder="Search chats..."
-class="mx-3 mt-3 p-2 rounded-lg bg-white/10 border border-white/20 text-sm"
-/>
-
-<div id="chatList"
-class="flex-1 overflow-y-auto p-3 space-y-2">
-
-</div>
-
+<div id="chatList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
 </div>
 
 <!-- MAIN -->
-
 <div class="flex-1 flex flex-col">
 
-<div class="p-4 border-b border-white/20 bg-white/5">
-
-<h1 id="chatTitle"
-class="font-bold text-lg">
-
-New Chat
-
-</h1>
-
+<div class="p-3 border-b border-white/20 bg-white/5">
+<h1 id="chatTitle">New Chat</h1>
 </div>
 
-<div id="messages"
-class="flex-1 overflow-y-auto p-6 space-y-4">
+<div id="messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+<!-- INPUT -->
+<div class="p-3 border-t border-white/20 flex gap-2">
+
+<input type="file" id="imageUpload" class="hidden">
+<input type="file" id="fileUpload" class="hidden">
+
+<button onclick="document.getElementById('imageUpload').click()"
+class="p-2 bg-white/10 rounded"><i class="fas fa-image"></i></button>
+
+<button onclick="document.getElementById('fileUpload').click()"
+class="p-2 bg-white/10 rounded"><i class="fas fa-paperclip"></i></button>
+
+<textarea id="messageInput"
+class="flex-1 p-2 rounded bg-white/10 resize-none"
+placeholder="Send message..."></textarea>
+
+<button id="sendBtn"
+class="px-4 bg-blue-500 rounded"><i class="fas fa-paper-plane"></i></button>
 
 </div>
-
-<div class="p-4 border-t border-white/20 bg-white/5">
-
-<div class="flex space-x-3 items-end">
-
-<!-- IMAGE -->
-
-<input
-type="file"
-id="imageUpload"
-accept="image/*"
-class="hidden">
-
-<button
-onclick="document.getElementById('imageUpload').click()"
-class="p-3 rounded-xl bg-white/10 hover:bg-white/20">
-
-<i class="fas fa-image"></i>
-
-</button>
-
-<!-- FILE -->
-
-<input
-type="file"
-id="fileUpload"
-class="hidden">
-
-<button
-onclick="document.getElementById('fileUpload').click()"
-class="p-3 rounded-xl bg-white/10 hover:bg-white/20">
-
-<i class="fas fa-paperclip"></i>
-
-</button>
-
-<textarea
-id="messageInput"
-rows="1"
-placeholder="Send a message..."
-class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none"></textarea>
-
-<button
-id="sendBtn"
-class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-
-<i class="fas fa-paper-plane"></i>
-
-</button>
-
-</div>
-
-</div>
-
 </div>
 
 <script>
 
-/* FIREBASE INIT */
-
+/* ================= FIREBASE ================= */
 const firebaseConfig = {
 apiKey: "AIzaSyCz5H-ad91O0FXsIev5V3ZY6x5TZ6mzr78",
 authDomain: "aimodel-attempt4.firebaseapp.com",
@@ -175,485 +93,171 @@ appId: "1:375459768438:web:e2a3071225c2bee5225757"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* STATE */
+/* ================= OPENAI ================= */
+const OPENAI_KEY = "YOUR_OPENAI_API_KEY";
 
+/* ================= STATE ================= */
 let chats = [];
 let activeChatId = null;
-let loggedIn = false;
 let userId = null;
 
-/* BUTTONS */
-
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const userNameDiv = document.getElementById("userName");
-
-/* LOGIN */
-
-loginBtn.onclick = () => {
-
-const provider =
-new firebase.auth.GoogleAuthProvider();
-
+/* ================= AUTH ================= */
+document.getElementById("loginBtn").onclick = () => {
+const provider = new firebase.auth.GoogleAuthProvider();
 auth.signInWithPopup(provider);
-
 };
 
-/* LOGOUT FIXED */
+document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
-logoutBtn.onclick = () => {
+auth.onAuthStateChanged(async user => {
 
-auth.signOut();
-
-};
-
-/* AUTH STATE FIXED */
-
-auth.onAuthStateChanged(user => {
-
-if (user) {
-
-loggedIn = true;
+if(user){
 userId = user.uid;
-
-loginBtn.classList.add("hidden");
-logoutBtn.classList.remove("hidden");
-
-userNameDiv.innerText =
-user.displayName;
-
+document.getElementById("loginBtn").classList.add("hidden");
+document.getElementById("logoutBtn").classList.remove("hidden");
 loadChats();
-
 }
-
-else {
-
-loggedIn = false;
+else{
 userId = null;
-
-loginBtn.classList.remove("hidden");
-logoutBtn.classList.add("hidden");
-
-userNameDiv.innerText = "";
-
 chats = [];
-activeChatId = null;
-
-renderChatList();
+document.getElementById("chatList").innerHTML = "";
 document.getElementById("messages").innerHTML = "";
-
 }
-
 });
 
-/* LOAD */
-
-function loadChats() {
-
-db.collection("users")
-.doc(userId)
-.collection("chats")
-.get()
-.then(snapshot => {
-
+/* ================= LOAD ================= */
+function loadChats(){
+db.collection("users").doc(userId).collection("chats").get()
+.then(snap=>{
 chats = [];
-
-snapshot.forEach(doc => {
-
-chats.push(doc.data());
-
+snap.forEach(d=>chats.push(d.data()));
+if(chats.length===0) createNewChat();
+else{
+activeChatId = chats[0].id;
+render();
+}
 });
-
-if (chats.length === 0) {
-
-createNewChat();
-
 }
 
-else {
-
-activeChatId =
-chats[0].id;
-
-renderChatList();
-renderMessages();
-
-}
-
+/* ================= SAVE ================= */
+function save(){
+if(!userId) return;
+chats.forEach(c=>{
+db.collection("users").doc(userId)
+.collection("chats").doc(c.id).set(c);
 });
-
 }
 
-/* CREATE */
-
-function createNewChat() {
-
+/* ================= CHAT ================= */
+function createNewChat(){
 const id = Date.now().toString();
-
-const chat = {
-
-id,
-title:"New Chat",
-messages:[]
-
-};
-
-chats.unshift(chat);
-
+chats.unshift({id,title:"New Chat",messages:[]});
 activeChatId = id;
+save();
+render();
+}
 
-saveChats();
-
-renderChatList();
+function render(){
+renderChats();
 renderMessages();
-
 }
 
-/* SAVE */
-
-function saveChats() {
-
-if (!loggedIn) return;
-
-chats.forEach(chat => {
-
-db.collection("users")
-.doc(userId)
-.collection("chats")
-.doc(chat.id)
-.set(chat);
-
-});
-
-}
-
-/* SEARCH */
-
-document
-.getElementById("searchInput")
-.addEventListener("input", e => {
-
-renderChatList(
-e.target.value.toLowerCase()
-);
-
-});
-
-/* CHAT LIST */
-
-function renderChatList(search="") {
-
-const list =
-document.getElementById("chatList");
-
+function renderChats(search=""){
+const list = document.getElementById("chatList");
 list.innerHTML="";
 
-chats.forEach(chat=>{
+chats.forEach(c=>{
+if(search && !c.title.toLowerCase().includes(search)) return;
 
-if(
-search &&
-!chat.title
-.toLowerCase()
-.includes(search)
-) return;
+const div = document.createElement("div");
+div.className = "p-2 rounded bg-white/10 cursor-pointer flex justify-between";
 
-const item=document.createElement("div");
+if(c.id===activeChatId) div.classList.add("bg-white/30");
 
-item.className=
-"flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+div.innerHTML = `
+<span>${c.title}</span>
+<i class="fas fa-ellipsis"></i>
+`;
 
-if(chat.id===activeChatId){
-
-item.classList.add("bg-white/20");
-
-}
-
-const title=document.createElement("span");
-
-title.innerText=chat.title;
-
-title.onclick=()=>{
-
-activeChatId=chat.id;
-
-renderChatList();
-renderMessages();
-
+div.onclick = () => {
+activeChatId = c.id;
+render();
 };
 
-const menu=document.createElement("button");
-
-menu.innerHTML=
-"<i class='fas fa-ellipsis-v'></i>";
-
-menu.onclick=e=>{
-
-e.stopPropagation();
-
-showMenu(chat.id);
-
-};
-
-item.appendChild(title);
-item.appendChild(menu);
-
-list.appendChild(item);
-
+list.appendChild(div);
 });
-
 }
-
-/* MENU FIXED — RENAME ADDED */
-
-function showMenu(chatId){
-
-const box=document.createElement("div");
-
-box.className=
-"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
-
-/* RENAME */
-
-const rename=document.createElement("button");
-
-rename.innerText="Rename";
-
-rename.className="block w-full text-left hover:text-blue-400";
-
-rename.onclick=()=>{
-
-const newName =
-prompt("Enter new chat name:");
-
-if(newName){
-
-const chat =
-chats.find(c=>c.id===chatId);
-
-chat.title=newName;
-
-saveChats();
-
-renderChatList();
-
-}
-
-box.remove();
-
-};
-
-/* DELETE */
-
-const del=document.createElement("button");
-
-del.innerText="Delete";
-
-del.className="block w-full text-left hover:text-red-400";
-
-del.onclick=()=>{
-
-chats=
-chats.filter(c=>c.id!==chatId);
-
-saveChats();
-
-renderChatList();
-renderMessages();
-
-box.remove();
-
-};
-
-/* EXPORT */
-
-const exp=document.createElement("button");
-
-exp.innerText="Export";
-
-exp.className="block w-full text-left hover:text-green-400";
-
-exp.onclick=()=>{
-
-const chat=
-chats.find(c=>c.id===chatId);
-
-let text="";
-
-chat.messages.forEach(m=>{
-
-text+=
-m.role+": "+m.content+"\n\n";
-
-});
-
-const blob=new Blob([text]);
-
-const a=document.createElement("a");
-
-a.href=
-URL.createObjectURL(blob);
-
-a.download="chat.txt";
-
-a.click();
-
-};
-
-box.appendChild(rename);
-box.appendChild(del);
-box.appendChild(exp);
-
-document.body.appendChild(box);
-
-setTimeout(()=>{
-
-box.remove();
-
-},3000);
-
-}
-
-/* Remaining message system same (unchanged) */
 
 function renderMessages(){
-
-const container=
-document.getElementById("messages");
-
-container.innerHTML="";
-
-const chat=
-chats.find(c=>c.id===activeChatId);
-
+const box = document.getElementById("messages");
+box.innerHTML="";
+const chat = chats.find(c=>c.id===activeChatId);
 if(!chat) return;
 
 chat.messages.forEach(m=>{
+const div = document.createElement("div");
+div.className = "p-2 rounded max-w-xs " +
+(m.role==="user" ? "ml-auto bg-blue-500" : "bg-white/10");
 
-addMessageToUI(
-m.role,
-m.content,
-m.type
-);
-
+div.innerText = m.content;
+box.appendChild(div);
 });
-
-scrollBottom();
-
 }
 
-function sendMessage(){
+/* ================= OPENAI ================= */
+async function askAI(messages){
 
-const input=
-document.getElementById("messageInput");
+const res = await fetch("https://api.openai.com/v1/chat/completions",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+OPENAI_KEY
+},
+body:JSON.stringify({
+model:"gpt-4o-mini",
+messages:messages
+})
+});
 
-const text=input.value.trim();
+const data = await res.json();
+return data.choices[0].message.content;
+}
 
+/* ================= SEND ================= */
+document.getElementById("sendBtn").onclick = async () => {
+
+const input = document.getElementById("messageInput");
+const text = input.value.trim();
 if(!text) return;
 
-const chat=
-chats.find(c=>c.id===activeChatId);
+const chat = chats.find(c=>c.id===activeChatId);
 
-chat.messages.push({
-role:"user",
-content:text
-});
-
-if(chat.messages.length===1){
-
-chat.title=text.substring(0,20);
-
-}
-
-renderMessages();
-
+chat.messages.push({role:"user",content:text});
 input.value="";
 
-setTimeout(()=>{
-
-chat.messages.push({
-role:"assistant",
-content:"Hello! This is a demo response."
-});
-
 renderMessages();
-saveChats();
 
-},800);
+const reply = await askAI([
+{role:"system",content:"You are a helpful assistant."},
+...chat.messages
+]);
 
-}
+chat.messages.push({role:"assistant",content:reply});
 
-function addMessageToUI(role,text,type){
+save();
+renderMessages();
+};
 
-const container=
-document.getElementById("messages");
-
-const msg=document.createElement("div");
-
-msg.classList.add(
-"chat-bubble",
-"p-3",
-"rounded-xl",
-"max-w-xl"
-);
-
-if(role==="user"){
-
-msg.classList.add(
-"ml-auto",
-"bg-blue-500"
-);
-
-}
-
-else{
-
-msg.classList.add(
-"bg-white/10"
-);
-
-}
-
-msg.innerText=text;
-
-container.appendChild(msg);
-
-}
-
-function scrollBottom(){
-
-const container=
-document.getElementById("messages");
-
-container.scrollTop=
-container.scrollHeight;
-
-}
-
-document
-.getElementById("newChatBtn")
-.onclick=createNewChat;
-
-document
-.getElementById("sendBtn")
-.onclick=sendMessage;
-
-document
-.getElementById("messageInput")
-.addEventListener("keydown",e=>{
-
-if(e.key==="Enter" && !e.shiftKey){
-
-e.preventDefault();
-
-sendMessage();
-
-}
-
+/* ================= SEARCH ================= */
+document.getElementById("searchInput").addEventListener("input",(e)=>{
+renderChats(e.target.value.toLowerCase());
 });
+
+/* ================= INIT ================= */
+document.getElementById("newChatBtn").onclick = createNewChat;
 
 </script>
 
