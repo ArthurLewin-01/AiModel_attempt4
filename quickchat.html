@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -16,7 +17,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 <!-- Firebase -->
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
@@ -70,6 +73,8 @@ class="text-sm text-gray-300 text-center"></div>
 
 </div>
 
+<!-- SEARCH -->
+
 <input
 id="searchInput"
 type="text"
@@ -104,15 +109,14 @@ class="flex-1 overflow-y-auto p-6 space-y-4">
 
 </div>
 
-<!-- INPUT AREA -->
-
 <div class="p-4 border-t border-white/20 bg-white/5">
 
 <div class="flex space-x-3 items-end">
 
 <!-- IMAGE BUTTON -->
 
-<input type="file"
+<input
+type="file"
 id="imageUpload"
 accept="image/*"
 class="hidden">
@@ -127,7 +131,8 @@ class="p-3 rounded-xl bg-white/10 hover:bg-white/20">
 
 <!-- FILE BUTTON -->
 
-<input type="file"
+<input
+type="file"
 id="fileUpload"
 class="hidden">
 
@@ -161,7 +166,185 @@ class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 <script>
 
-/* ---------- FILE & IMAGE HANDLING ---------- */
+/* FIREBASE INIT */
+
+const firebaseConfig = {
+apiKey: "AIzaSyCz5H-ad91O0FXsIev5V3ZY6x5TZ6mzr78",
+authDomain: "aimodel-attempt4.firebaseapp.com",
+projectId: "aimodel-attempt4",
+storageBucket: "aimodel-attempt4.firebasestorage.app",
+messagingSenderId: "375459768438",
+appId: "1:375459768438:web:e2a3071225c2bee5225757"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* LOGIN STATE */
+
+let loggedIn = false;
+let userId = null;
+
+/* AUTH BUTTONS */
+
+const loginBtn =
+document.getElementById("loginBtn");
+
+const logoutBtn =
+document.getElementById("logoutBtn");
+
+const userNameDiv =
+document.getElementById("userName");
+
+loginBtn.onclick = () => {
+
+const provider =
+new firebase.auth.GoogleAuthProvider();
+
+auth.signInWithPopup(provider);
+
+};
+
+logoutBtn.onclick = () => {
+
+auth.signOut();
+
+};
+
+/* AUTH STATE */
+
+auth.onAuthStateChanged(user => {
+
+if (user) {
+
+loggedIn = true;
+userId = user.uid;
+
+loginBtn.classList.add("hidden");
+logoutBtn.classList.remove("hidden");
+
+userNameDiv.innerText =
+user.displayName;
+
+loadChatsFromFirebase();
+
+}
+
+else {
+
+loggedIn = false;
+
+loginBtn.classList.remove("hidden");
+logoutBtn.classList.add("hidden");
+
+userNameDiv.innerText = "";
+
+}
+
+});
+
+/* CHAT SYSTEM */
+
+let chats = [];
+let activeChatId = null;
+
+/* SEARCH */
+
+document
+.getElementById("searchInput")
+.addEventListener("input", e => {
+
+renderChatList(
+e.target.value.toLowerCase()
+);
+
+});
+
+/* FIREBASE LOAD */
+
+function loadChatsFromFirebase() {
+
+db.collection("users")
+.doc(userId)
+.collection("chats")
+.get()
+.then(snapshot => {
+
+chats = [];
+
+snapshot.forEach(doc => {
+
+chats.push(doc.data());
+
+});
+
+if (chats.length === 0) {
+
+createNewChat();
+
+}
+
+else {
+
+activeChatId =
+chats[0].id;
+
+renderChatList();
+renderMessages();
+
+}
+
+});
+
+}
+
+/* CREATE CHAT */
+
+function createNewChat() {
+
+const id =
+Date.now().toString();
+
+const chat = {
+
+id,
+title: "New Chat",
+messages: []
+
+};
+
+chats.unshift(chat);
+
+activeChatId = id;
+
+saveChats();
+
+renderChatList();
+renderMessages();
+
+}
+
+/* SAVE */
+
+function saveChats() {
+
+if (!loggedIn) return;
+
+chats.forEach(chat => {
+
+db.collection("users")
+.doc(userId)
+.collection("chats")
+.doc(chat.id)
+.set(chat);
+
+});
+
+}
+
+/* FILE + IMAGE */
 
 document
 .getElementById("imageUpload")
@@ -175,11 +358,19 @@ const reader = new FileReader();
 
 reader.onload = () => {
 
-addFileMessage(
-"image",
-reader.result,
-file.name
-);
+const chat =
+chats.find(c=>c.id===activeChatId);
+
+chat.messages.push({
+
+role:"user",
+type:"image",
+content:reader.result
+
+});
+
+renderMessages();
+saveChats();
 
 };
 
@@ -195,42 +386,286 @@ const file = e.target.files[0];
 
 if (!file) return;
 
-addFileMessage(
-"file",
-"",
-file.name
-);
-
-});
-
-function addFileMessage(type,data,name){
-
-const chat=
+const chat =
 chats.find(c=>c.id===activeChatId);
 
 chat.messages.push({
 
 role:"user",
-type:type,
-content:data,
-name:name
+type:"file",
+content:file.name
 
+});
+
+renderMessages();
+saveChats();
+
+});
+
+/* RENDER CHAT LIST */
+
+function renderChatList(searchTerm="") {
+
+const list =
+document.getElementById("chatList");
+
+list.innerHTML = "";
+
+chats.forEach(chat => {
+
+if (
+searchTerm &&
+!chat.title
+.toLowerCase()
+.includes(searchTerm)
+) return;
+
+const item =
+document.createElement("div");
+
+item.className =
+"flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+
+if (chat.id === activeChatId) {
+
+item.classList.add("bg-white/20");
+
+}
+
+const title =
+document.createElement("span");
+
+title.innerText =
+chat.title || "New Chat";
+
+title.onclick = () => {
+
+activeChatId =
+chat.id;
+
+renderChatList();
+renderMessages();
+
+};
+
+/* MENU */
+
+const menu =
+document.createElement("button");
+
+menu.innerHTML =
+"<i class='fas fa-ellipsis-v'></i>";
+
+menu.onclick = e => {
+
+e.stopPropagation();
+
+showMenu(chat.id);
+
+};
+
+item.appendChild(title);
+item.appendChild(menu);
+
+list.appendChild(item);
+
+});
+
+}
+
+/* MENU */
+
+function showMenu(chatId) {
+
+const menuBox =
+document.createElement("div");
+
+menuBox.className =
+"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
+
+/* RENAME */
+
+const renameBtn =
+document.createElement("button");
+
+renameBtn.innerText="Rename";
+
+renameBtn.onclick=()=>{
+
+const newName=prompt("New name:");
+
+if(newName){
+
+const chat=
+chats.find(c=>c.id===chatId);
+
+chat.title=newName;
+
+saveChats();
+renderChatList();
+
+}
+
+menuBox.remove();
+
+};
+
+/* DELETE */
+
+const deleteBtn=
+document.createElement("button");
+
+deleteBtn.innerText="Delete";
+
+deleteBtn.onclick=()=>{
+
+chats=
+chats.filter(c=>c.id!==chatId);
+
+saveChats();
+
+renderChatList();
+renderMessages();
+
+menuBox.remove();
+
+};
+
+/* EXPORT */
+
+const exportBtn=
+document.createElement("button");
+
+exportBtn.innerText="Export";
+
+exportBtn.onclick=()=>{
+
+const chat=
+chats.find(c=>c.id===chatId);
+
+let text="";
+
+chat.messages.forEach(m=>{
+
+text+=
+m.role+": "+m.content+"\n\n";
+
+});
+
+const blob=
+new Blob([text]);
+
+const a=
+document.createElement("a");
+
+a.href=
+URL.createObjectURL(blob);
+
+a.download="chat.txt";
+
+a.click();
+
+};
+
+menuBox.appendChild(renameBtn);
+menuBox.appendChild(deleteBtn);
+menuBox.appendChild(exportBtn);
+
+document.body.appendChild(menuBox);
+
+setTimeout(()=>{
+menuBox.remove();
+},3000);
+
+}
+
+/* RENDER MSG */
+
+function renderMessages() {
+
+const container =
+document.getElementById("messages");
+
+container.innerHTML = "";
+
+const chat =
+chats.find(c => c.id === activeChatId);
+
+if (!chat) return;
+
+chat.messages.forEach(msg => {
+
+addMessageToUI(
+msg.role,
+msg.content,
+msg.type
+);
+
+});
+
+scrollBottom();
+
+}
+
+/* SEND */
+
+function sendMessage() {
+
+const input =
+document.getElementById("messageInput");
+
+const text =
+input.value.trim();
+
+if (!text) return;
+
+const chat =
+chats.find(c => c.id === activeChatId);
+
+chat.messages.push({
+role:"user",
+content:text
+});
+
+if (chat.messages.length === 1) {
+
+chat.title =
+text.substring(0,20);
+
+}
+
+addMessageToUI("user",text);
+
+input.value = "";
+
+scrollBottom();
+
+setTimeout(() => {
+
+const reply =
+"Hello! This is a demo response.";
+
+chat.messages.push({
+role:"assistant",
+content: reply
 });
 
 renderMessages();
 
 saveChats();
 
+},800);
+
 }
 
-/* ---------- MESSAGE RENDER ---------- */
+/* MESSAGE UI */
 
-function addMessageToUI(role,text,type,name){
+function addMessageToUI(role,text,type) {
 
-const container=
+const container =
 document.getElementById("messages");
 
-const msg=
+const msg =
 document.createElement("div");
 
 msg.classList.add(
@@ -240,14 +675,16 @@ msg.classList.add(
 "max-w-xl"
 );
 
-if(role==="user"){
+if (role === "user") {
 
 msg.classList.add(
 "ml-auto",
 "bg-blue-500"
 );
 
-}else{
+}
+
+else {
 
 msg.classList.add(
 "bg-white/10"
@@ -255,29 +692,34 @@ msg.classList.add(
 
 }
 
-if(type==="image"){
+/* IMAGE */
 
-const img=
+if (type === "image") {
+
+const img =
 document.createElement("img");
 
-img.src=text;
+img.src = text;
 
-img.className="rounded-lg max-w-xs";
+img.className =
+"rounded-lg max-w-xs";
 
 msg.appendChild(img);
 
 }
 
-else if(type==="file"){
+/* FILE */
 
-msg.innerHTML=
-`📄 ${name}`;
+else if (type === "file") {
+
+msg.innerText =
+"📄 " + text;
 
 }
 
-else{
+else {
 
-msg.innerText=text;
+msg.innerText = text;
 
 }
 
@@ -285,7 +727,45 @@ container.appendChild(msg);
 
 }
 
-/* Remaining chat logic stays same */
+/* SCROLL */
+
+function scrollBottom() {
+
+const container =
+document.getElementById("messages");
+
+container.scrollTop =
+container.scrollHeight;
+
+}
+
+/* EVENTS */
+
+document
+.getElementById("newChatBtn")
+.onclick = createNewChat;
+
+document
+.getElementById("sendBtn")
+.onclick = sendMessage;
+
+document
+.getElementById("messageInput")
+.addEventListener("keydown",e => {
+
+if (e.key === "Enter" && !e.shiftKey) {
+
+e.preventDefault();
+
+sendMessage();
+
+}
+
+});
+
+/* INIT */
+
+createNewChat();
 
 </script>
 
