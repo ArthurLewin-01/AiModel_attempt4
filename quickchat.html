@@ -2,33 +2,31 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Quick Chat</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-.chat-bubble {
-animation: fadeIn 0.25s ease;
-}
+.chat-bubble { animation: fadeIn 0.25s ease; }
 
 @keyframes fadeIn {
 from { opacity:0; transform: translateY(10px); }
 to { opacity:1; transform: translateY(0); }
 }
-</style>
 
+.typing {
+opacity: 0.6;
+font-style: italic;
+}
+</style>
 </head>
 
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-screen flex">
@@ -38,18 +36,15 @@ to { opacity:1; transform: translateY(0); }
 
 <div class="p-4 border-b border-white/20 space-y-3">
 
-<button id="newChatBtn"
-class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
+<button id="newChatBtn" class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
 <i class="fas fa-plus mr-2"></i> New Chat
 </button>
 
-<button id="loginBtn"
-class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-<i class="fab fa-google mr-2"></i> Login with Google
+<button id="loginBtn" class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
+<i class="fab fa-google mr-2"></i> Login
 </button>
 
-<button id="logoutBtn"
-class="w-full p-3 rounded-xl bg-red-500 hidden">
+<button id="logoutBtn" class="w-full p-3 rounded-xl bg-red-500 hidden">
 Logout
 </button>
 
@@ -57,10 +52,8 @@ Logout
 
 </div>
 
-<input id="searchInput"
-type="text"
-placeholder="Search chats..."
-class="mx-3 mt-3 p-2 rounded-lg bg-white/10 border border-white/20 text-sm"/>
+<input id="searchInput" class="mx-3 mt-3 p-2 rounded-lg bg-white/10 text-sm"
+placeholder="Search chats..."/>
 
 <div id="chatList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
@@ -75,15 +68,11 @@ class="mx-3 mt-3 p-2 rounded-lg bg-white/10 border border-white/20 text-sm"/>
 
 <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
-<div class="p-4 border-t border-white/20 bg-white/5">
+<div class="p-4 border-t border-white/20 bg-white/5 flex space-x-3">
 
-<div class="flex space-x-3 items-end">
-
-<textarea
-id="messageInput"
-rows="1"
-placeholder="Send a message..."
-class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none"></textarea>
+<textarea id="messageInput"
+class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20"
+placeholder="Send a message..."></textarea>
 
 <button id="sendBtn"
 class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
@@ -93,11 +82,13 @@ class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 </div>
 
 </div>
-</div>
 
 <script>
 
-/* FIREBASE INIT */
+/* ================= OPENAI ================= */
+const OPENAI_API_KEY = "PASTE_YOUR_KEY_HERE";
+
+/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyCz5H-ad91O0FXsIev5V3ZY6x5TZ6mzr78",
 authDomain: "aimodel-attempt4.firebaseapp.com",
@@ -108,20 +99,18 @@ appId: "1:375459768438:web:e2a3071225c2bee5225757"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* STATE */
 let chats = [];
 let activeChatId = null;
-let loggedIn = false;
 let userId = null;
+let loggedIn = false;
 
 /* LOGIN */
 document.getElementById("loginBtn").onclick = () => {
-const provider = new firebase.auth.GoogleAuthProvider();
-auth.signInWithPopup(provider);
+auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 };
 
 document.getElementById("logoutBtn").onclick = () => auth.signOut();
@@ -129,26 +118,20 @@ document.getElementById("logoutBtn").onclick = () => auth.signOut();
 /* AUTH */
 auth.onAuthStateChanged(user => {
 
-if (user) {
+if(user){
 loggedIn = true;
 userId = user.uid;
 
 document.getElementById("loginBtn").classList.add("hidden");
 document.getElementById("logoutBtn").classList.remove("hidden");
-
 document.getElementById("userName").innerText = user.displayName;
 
 loadChats();
 }
-
 else {
 loggedIn = false;
-userId = null;
 chats = [];
 activeChatId = null;
-
-document.getElementById("loginBtn").classList.remove("hidden");
-document.getElementById("logoutBtn").classList.add("hidden");
 
 document.getElementById("messages").innerHTML = "";
 document.getElementById("chatList").innerHTML = "";
@@ -156,252 +139,193 @@ document.getElementById("chatList").innerHTML = "";
 });
 
 /* LOAD */
-function loadChats() {
-
-db.collection("users")
-.doc(userId)
-.collection("chats")
-.get()
-.then(snapshot => {
-
+function loadChats(){
+db.collection("users").doc(userId).collection("chats").get()
+.then(snap => {
 chats = [];
+snap.forEach(d => chats.push(d.data()));
 
-snapshot.forEach(doc => {
-chats.push(doc.data());
-});
-
-if (chats.length === 0) {
-createNewChat();
-} else {
+if(chats.length===0) createNewChat();
+else {
 activeChatId = chats[0].id;
 renderChatList();
 renderMessages();
 }
-
 });
 }
 
-/* CREATE */
-function createNewChat() {
-
+/* CHAT */
+function createNewChat(){
 const id = Date.now().toString();
-
-const chat = {
-id,
-title: "New Chat",
-messages: []
-};
-
-chats.unshift(chat);
+chats.unshift({id, title:"New Chat", messages:[]});
 activeChatId = id;
-
 saveChats();
 renderChatList();
 renderMessages();
 }
 
-/* SAVE */
-function saveChats() {
-if (!loggedIn) return;
+function saveChats(){
+if(!loggedIn) return;
 
-chats.forEach(chat => {
-db.collection("users")
-.doc(userId)
-.collection("chats")
-.doc(chat.id)
-.set(chat);
+chats.forEach(c=>{
+db.collection("users").doc(userId).collection("chats").doc(c.id).set(c);
 });
 }
-
-/* SEARCH */
-document.getElementById("searchInput").addEventListener("input", e => {
-renderChatList(e.target.value.toLowerCase());
-});
 
 /* CHAT LIST */
-function renderChatList(search="") {
+function renderChatList(){
 
 const list = document.getElementById("chatList");
-list.innerHTML = "";
+list.innerHTML="";
 
-chats.forEach(chat => {
+chats.forEach(c=>{
 
-if (search && !chat.title.toLowerCase().includes(search)) return;
+const div = document.createElement("div");
+div.className="flex justify-between p-3 rounded-lg hover:bg-white/20 cursor-pointer";
 
-const item = document.createElement("div");
-item.className = "flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
-
-if (chat.id === activeChatId) item.classList.add("bg-white/20");
+if(c.id===activeChatId) div.classList.add("bg-white/20");
 
 const title = document.createElement("span");
-title.innerText = chat.title;
+title.innerText = c.title;
 
-title.onclick = () => {
-activeChatId = chat.id;
+title.onclick=()=>{
+activeChatId=c.id;
 renderChatList();
 renderMessages();
 };
 
-/* FIXED MENU BUTTON */
 const menu = document.createElement("button");
-menu.innerHTML = "<i class='fas fa-ellipsis-v'></i>";
+menu.innerHTML="⋮";
+menu.onclick=()=>showMenu(c.id);
 
-menu.onclick = (e) => {
-e.stopPropagation();
-showMenu(chat.id);
-};
-
-item.appendChild(title);
-item.appendChild(menu);
-
-list.appendChild(item);
+div.appendChild(title);
+div.appendChild(menu);
+list.appendChild(div);
 
 });
 }
 
-/* MENU FIXED */
-function showMenu(chatId) {
+/* MENU */
+function showMenu(id){
 
 const box = document.createElement("div");
-box.className = "fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
+box.className="fixed bg-black p-2 rounded-lg space-y-2";
 
 const rename = document.createElement("button");
-rename.innerText = "Rename";
-rename.onclick = () => {
-
-const newName = prompt("Enter new name:");
-if (newName) {
-const chat = chats.find(c => c.id === chatId);
-chat.title = newName;
+rename.innerText="Rename";
+rename.onclick=()=>{
+const n = prompt("New name:");
+if(n){
+chats.find(c=>c.id===id).title=n;
 saveChats();
 renderChatList();
 }
-
 box.remove();
 };
 
 const del = document.createElement("button");
-del.innerText = "Delete";
-del.onclick = () => {
-
-chats = chats.filter(c => c.id !== chatId);
+del.innerText="Delete";
+del.onclick=()=>{
+chats = chats.filter(c=>c.id!==id);
 saveChats();
-
-if (activeChatId === chatId && chats.length > 0) {
-activeChatId = chats[0].id;
-}
-
 renderChatList();
 renderMessages();
 box.remove();
 };
 
-const exp = document.createElement("button");
-exp.innerText = "Export";
-exp.onclick = () => {
-
-const chat = chats.find(c => c.id === chatId);
-let text = "";
-
-chat.messages.forEach(m => {
-text += m.role + ": " + m.content + "\n\n";
-});
-
-const blob = new Blob([text]);
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = "chat.txt";
-a.click();
-};
-
-box.appendChild(rename);
-box.appendChild(del);
-box.appendChild(exp);
-
+box.append(rename,del);
 document.body.appendChild(box);
 
-setTimeout(() => box.remove(), 3000);
+setTimeout(()=>box.remove(),3000);
 }
 
 /* MESSAGES */
-function renderMessages() {
+function renderMessages(){
+const box=document.getElementById("messages");
+box.innerHTML="";
 
-const container = document.getElementById("messages");
-container.innerHTML = "";
+const chat = chats.find(c=>c.id===activeChatId);
+if(!chat) return;
 
-const chat = chats.find(c => c.id === activeChatId);
-if (!chat) return;
+chat.messages.forEach(m=>addMsg(m.role,m.content));
 
-chat.messages.forEach(m => {
-addMessageToUI(m.role, m.content);
+scroll();
+}
+
+/* OPENAI */
+async function askAI(messages){
+
+const res = await fetch("https://api.openai.com/v1/chat/completions",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+OPENAI_API_KEY
+},
+body:JSON.stringify({
+model:"gpt-4o-mini",
+messages:messages
+})
 });
 
-scrollBottom();
+const data = await res.json();
+return data.choices[0].message.content;
 }
 
-/* SEND FIXED */
-function sendMessage() {
+/* SEND */
+async function sendMessage(){
 
-const input = document.getElementById("messageInput");
-const text = input.value.trim();
-if (!text) return;
+const input=document.getElementById("messageInput");
+const text=input.value.trim();
+if(!text) return;
 
-const chat = chats.find(c => c.id === activeChatId);
-if (!chat) return;
+const chat = chats.find(c=>c.id===activeChatId);
 
-chat.messages.push({ role: "user", content: text });
+chat.messages.push({role:"user",content:text});
 
-if (chat.messages.length === 1) {
-chat.title = text.substring(0, 20);
-}
-
-input.value = "";
-
+input.value="";
 renderMessages();
-scrollBottom();
 
-/* FIXED AI RESPONSE */
-setTimeout(() => {
-chat.messages.push({
-role: "assistant",
-content: "Hello! This is a demo response."
-});
+/* typing */
+addMsg("assistant","AI is typing...",true);
+scroll();
+
+const reply = await askAI(chat.messages);
+
+chat.messages.push({role:"assistant",content:reply});
 
 renderMessages();
 saveChats();
-}, 700);
 }
 
 /* UI */
-function addMessageToUI(role, text) {
+function addMsg(role,text,typing=false){
 
-const container = document.getElementById("messages");
+const box=document.getElementById("messages");
 
-const msg = document.createElement("div");
-msg.classList.add("chat-bubble", "p-3", "rounded-xl", "max-w-xl");
+const div=document.createElement("div");
+div.className="p-3 rounded-xl max-w-xl chat-bubble";
 
-if (role === "user") {
-msg.classList.add("ml-auto", "bg-blue-500");
-} else {
-msg.classList.add("bg-white/10");
+if(role==="user") div.classList.add("ml-auto","bg-blue-500");
+else div.classList.add("bg-white/10");
+
+if(typing) div.classList.add("opacity-60");
+
+div.innerText=text;
+box.appendChild(div);
 }
 
-msg.innerText = text;
-container.appendChild(msg);
+/* scroll */
+function scroll(){
+const c=document.getElementById("messages");
+c.scrollTop=c.scrollHeight;
 }
 
-function scrollBottom() {
-const c = document.getElementById("messages");
-c.scrollTop = c.scrollHeight;
-}
+/* events */
+document.getElementById("newChatBtn").onclick=createNewChat;
+document.getElementById("sendBtn").onclick=sendMessage;
 
-/* EVENTS */
-document.getElementById("newChatBtn").onclick = createNewChat;
-
-document.getElementById("sendBtn").onclick = sendMessage;
-
-document.getElementById("messageInput").addEventListener("keydown", e => {
-if (e.key === "Enter" && !e.shiftKey) {
+document.getElementById("messageInput").addEventListener("keydown",e=>{
+if(e.key==="Enter"&&!e.shiftKey){
 e.preventDefault();
 sendMessage();
 }
