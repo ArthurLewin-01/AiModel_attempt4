@@ -8,14 +8,18 @@
 <title>Quick Chat</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-.chat-bubble { animation: fadeIn 0.25s ease; }
+.chat-bubble {
+animation: fadeIn 0.25s ease;
+}
 
 @keyframes fadeIn {
 from { opacity:0; transform: translateY(10px); }
@@ -23,10 +27,11 @@ to { opacity:1; transform: translateY(0); }
 }
 
 .typing {
-opacity: 0.6;
-font-style: italic;
+opacity:0.6;
+font-style:italic;
 }
 </style>
+
 </head>
 
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-screen flex">
@@ -36,26 +41,32 @@ font-style: italic;
 
 <div class="p-4 border-b border-white/20 space-y-3">
 
-<button id="newChatBtn" class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
+<button id="newChatBtn"
+class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
 <i class="fas fa-plus mr-2"></i> New Chat
 </button>
 
-<button id="loginBtn" class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
+<button id="loginBtn"
+class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 <i class="fab fa-google mr-2"></i> Login
 </button>
 
-<button id="logoutBtn" class="w-full p-3 rounded-xl bg-red-500 hidden">
+<button id="logoutBtn"
+class="w-full p-3 rounded-xl bg-red-500 hidden">
 Logout
 </button>
 
-<div id="userName" class="text-sm text-gray-300 text-center"></div>
+<div id="userName"
+class="text-sm text-gray-300 text-center"></div>
 
 </div>
 
-<input id="searchInput" class="mx-3 mt-3 p-2 rounded-lg bg-white/10 text-sm"
+<input id="searchInput"
+class="mx-3 mt-3 p-2 rounded-lg bg-white/10 text-sm"
 placeholder="Search chats..."/>
 
-<div id="chatList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+<div id="chatList"
+class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
 </div>
 
@@ -63,10 +74,12 @@ placeholder="Search chats..."/>
 <div class="flex-1 flex flex-col">
 
 <div class="p-4 border-b border-white/20 bg-white/5">
-<h1 id="chatTitle" class="font-bold text-lg">New Chat</h1>
+<h1 id="chatTitle"
+class="font-bold text-lg">New Chat</h1>
 </div>
 
-<div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+<div id="messages"
+class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
 <div class="p-4 border-t border-white/20 bg-white/5 flex space-x-3">
 
@@ -85,9 +98,6 @@ class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 <script>
 
-/* ================= OPENAI ================= */
-const OPENAI_API_KEY = "PASTE_YOUR_KEY_HERE";
-
 /* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyCz5H-ad91O0FXsIev5V3ZY6x5TZ6mzr78",
@@ -99,236 +109,368 @@ appId: "1:375459768438:web:e2a3071225c2bee5225757"
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* STATE */
-let chats = [];
-let activeChatId = null;
-let userId = null;
-let loggedIn = false;
+let chats=[];
+let activeChatId=null;
+let userId=null;
+let loggedIn=false;
 
 /* LOGIN */
-document.getElementById("loginBtn").onclick = () => {
+document.getElementById("loginBtn").onclick=()=>{
 auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 };
 
-document.getElementById("logoutBtn").onclick = () => auth.signOut();
+document.getElementById("logoutBtn").onclick=()=>{
+auth.signOut();
+};
 
 /* AUTH */
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(user=>{
 
 if(user){
-loggedIn = true;
-userId = user.uid;
+
+loggedIn=true;
+userId=user.uid;
 
 document.getElementById("loginBtn").classList.add("hidden");
 document.getElementById("logoutBtn").classList.remove("hidden");
-document.getElementById("userName").innerText = user.displayName;
+
+document.getElementById("userName").innerText=user.displayName;
 
 loadChats();
 }
-else {
-loggedIn = false;
-chats = [];
-activeChatId = null;
 
-document.getElementById("messages").innerHTML = "";
-document.getElementById("chatList").innerHTML = "";
+else{
+
+loggedIn=false;
+userId=null;
+chats=[];
+activeChatId=null;
+
+document.getElementById("messages").innerHTML="";
+document.getElementById("chatList").innerHTML="";
+
+document.getElementById("loginBtn").classList.remove("hidden");
+document.getElementById("logoutBtn").classList.add("hidden");
+
 }
+
 });
 
 /* LOAD */
 function loadChats(){
-db.collection("users").doc(userId).collection("chats").get()
-.then(snap => {
-chats = [];
-snap.forEach(d => chats.push(d.data()));
 
-if(chats.length===0) createNewChat();
-else {
-activeChatId = chats[0].id;
+db.collection("users")
+.doc(userId)
+.collection("chats")
+.get()
+.then(snapshot=>{
+
+chats=[];
+
+snapshot.forEach(doc=>{
+chats.push(doc.data());
+});
+
+if(chats.length===0){
+
+createNewChat();
+
+}
+else{
+
+activeChatId=chats[0].id;
+
 renderChatList();
 renderMessages();
-}
-});
+
 }
 
-/* CHAT */
+});
+
+}
+
+/* CREATE */
 function createNewChat(){
-const id = Date.now().toString();
-chats.unshift({id, title:"New Chat", messages:[]});
-activeChatId = id;
+
+const id=Date.now().toString();
+
+chats.unshift({
+id,
+title:"New Chat",
+messages:[]
+});
+
+activeChatId=id;
+
 saveChats();
 renderChatList();
 renderMessages();
+
 }
 
+/* SAVE */
 function saveChats(){
+
 if(!loggedIn) return;
 
-chats.forEach(c=>{
-db.collection("users").doc(userId).collection("chats").doc(c.id).set(c);
+chats.forEach(chat=>{
+
+db.collection("users")
+.doc(userId)
+.collection("chats")
+.doc(chat.id)
+.set(chat);
+
 });
+
 }
 
 /* CHAT LIST */
 function renderChatList(){
 
-const list = document.getElementById("chatList");
+const list=document.getElementById("chatList");
 list.innerHTML="";
 
-chats.forEach(c=>{
+chats.forEach(chat=>{
 
-const div = document.createElement("div");
-div.className="flex justify-between p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+const item=document.createElement("div");
 
-if(c.id===activeChatId) div.classList.add("bg-white/20");
+item.className=
+"flex justify-between p-3 rounded-lg hover:bg-white/20 cursor-pointer";
 
-const title = document.createElement("span");
-title.innerText = c.title;
+if(chat.id===activeChatId)
+item.classList.add("bg-white/20");
+
+const title=document.createElement("span");
+title.innerText=chat.title;
 
 title.onclick=()=>{
-activeChatId=c.id;
+activeChatId=chat.id;
 renderChatList();
 renderMessages();
 };
 
-const menu = document.createElement("button");
+const menu=document.createElement("button");
 menu.innerHTML="⋮";
-menu.onclick=()=>showMenu(c.id);
 
-div.appendChild(title);
-div.appendChild(menu);
-list.appendChild(div);
+menu.onclick=(e)=>{
+e.stopPropagation();
+showMenu(chat.id);
+};
+
+item.appendChild(title);
+item.appendChild(menu);
+
+list.appendChild(item);
 
 });
+
 }
 
 /* MENU */
 function showMenu(id){
 
-const box = document.createElement("div");
-box.className="fixed bg-black p-2 rounded-lg space-y-2";
+const box=document.createElement("div");
 
-const rename = document.createElement("button");
+box.className=
+"fixed bg-black p-2 rounded-lg space-y-2";
+
+/* RENAME */
+const rename=document.createElement("button");
 rename.innerText="Rename";
+
 rename.onclick=()=>{
-const n = prompt("New name:");
+
+const n=prompt("New name:");
+
 if(n){
+
 chats.find(c=>c.id===id).title=n;
+
 saveChats();
 renderChatList();
+
 }
+
 box.remove();
+
 };
 
-const del = document.createElement("button");
+/* DELETE */
+const del=document.createElement("button");
 del.innerText="Delete";
+
 del.onclick=()=>{
-chats = chats.filter(c=>c.id!==id);
+
+chats=
+chats.filter(c=>c.id!==id);
+
 saveChats();
+
 renderChatList();
 renderMessages();
+
 box.remove();
+
 };
 
 box.append(rename,del);
+
 document.body.appendChild(box);
 
 setTimeout(()=>box.remove(),3000);
+
 }
 
 /* MESSAGES */
 function renderMessages(){
-const box=document.getElementById("messages");
-box.innerHTML="";
 
-const chat = chats.find(c=>c.id===activeChatId);
+const container=
+document.getElementById("messages");
+
+container.innerHTML="";
+
+const chat=
+chats.find(c=>c.id===activeChatId);
+
 if(!chat) return;
 
-chat.messages.forEach(m=>addMsg(m.role,m.content));
+chat.messages.forEach(m=>{
 
-scroll();
-}
+addMsg(m.role,m.content);
 
-/* OPENAI */
-async function askAI(messages){
-
-const res = await fetch("https://api.openai.com/v1/chat/completions",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+OPENAI_API_KEY
-},
-body:JSON.stringify({
-model:"gpt-4o-mini",
-messages:messages
-})
 });
 
-const data = await res.json();
-return data.choices[0].message.content;
+scroll();
+
+}
+
+/* REAL AI CALL */
+async function askAI(messages){
+
+const res=await fetch("http://localhost:3000/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+messages
+})
+
+});
+
+const data=await res.json();
+
+return data.reply;
+
 }
 
 /* SEND */
 async function sendMessage(){
 
-const input=document.getElementById("messageInput");
+const input=
+document.getElementById("messageInput");
+
 const text=input.value.trim();
+
 if(!text) return;
 
-const chat = chats.find(c=>c.id===activeChatId);
+const chat=
+chats.find(c=>c.id===activeChatId);
 
-chat.messages.push({role:"user",content:text});
+chat.messages.push({
+role:"user",
+content:text
+});
 
 input.value="";
+
 renderMessages();
 
 /* typing */
 addMsg("assistant","AI is typing...",true);
 scroll();
 
-const reply = await askAI(chat.messages);
+/* real AI */
+const reply=
+await askAI(chat.messages);
 
-chat.messages.push({role:"assistant",content:reply});
+chat.messages.push({
+role:"assistant",
+content:reply
+});
 
 renderMessages();
 saveChats();
+
 }
 
 /* UI */
 function addMsg(role,text,typing=false){
 
-const box=document.getElementById("messages");
+const box=
+document.getElementById("messages");
 
-const div=document.createElement("div");
-div.className="p-3 rounded-xl max-w-xl chat-bubble";
+const div=
+document.createElement("div");
 
-if(role==="user") div.classList.add("ml-auto","bg-blue-500");
-else div.classList.add("bg-white/10");
+div.className=
+"p-3 rounded-xl max-w-xl chat-bubble";
 
-if(typing) div.classList.add("opacity-60");
+if(role==="user")
+div.classList.add("ml-auto","bg-blue-500");
+
+else
+div.classList.add("bg-white/10");
+
+if(typing)
+div.classList.add("typing");
 
 div.innerText=text;
+
 box.appendChild(div);
+
 }
 
-/* scroll */
+/* SCROLL */
 function scroll(){
-const c=document.getElementById("messages");
-c.scrollTop=c.scrollHeight;
+
+const c=
+document.getElementById("messages");
+
+c.scrollTop=
+c.scrollHeight;
+
 }
 
-/* events */
-document.getElementById("newChatBtn").onclick=createNewChat;
-document.getElementById("sendBtn").onclick=sendMessage;
+/* EVENTS */
+document
+.getElementById("newChatBtn")
+.onclick=createNewChat;
 
-document.getElementById("messageInput").addEventListener("keydown",e=>{
-if(e.key==="Enter"&&!e.shiftKey){
+document
+.getElementById("sendBtn")
+.onclick=sendMessage;
+
+document
+.getElementById("messageInput")
+.addEventListener("keydown",e=>{
+
+if(e.key==="Enter" && !e.shiftKey){
+
 e.preventDefault();
 sendMessage();
+
 }
+
 });
 
 </script>
