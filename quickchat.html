@@ -13,7 +13,6 @@
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -30,8 +29,8 @@ to { opacity:1; transform: translateY(0); }
 }
 
 .typing {
-opacity:0.6;
-font-style:italic;
+opacity: 0.6;
+font-style: italic;
 }
 
 </style>
@@ -41,25 +40,30 @@ font-style:italic;
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white h-screen flex">
 
 <!-- SIDEBAR -->
+
 <div class="w-[260px] bg-white/10 backdrop-blur-md border-r border-white/20 flex flex-col">
 
 <div class="p-4 border-b border-white/20 space-y-3">
 
 <button id="newChatBtn"
 class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
-<i class="fas fa-plus mr-2"></i>
-New Chat
+
+<i class="fas fa-plus mr-2"></i> New Chat
+
 </button>
 
 <button id="loginBtn"
 class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-<i class="fab fa-google mr-2"></i>
-Login
+
+<i class="fab fa-google mr-2"></i> Login
+
 </button>
 
 <button id="logoutBtn"
 class="w-full p-3 rounded-xl bg-red-500 hidden">
+
 Logout
+
 </button>
 
 <div id="userName"
@@ -76,36 +80,38 @@ class="mx-3 mt-3 p-2 rounded-lg bg-white/10 border border-white/20 text-sm"
 
 <div id="chatList"
 class="flex-1 overflow-y-auto p-3 space-y-2">
+
 </div>
 
 </div>
 
 <!-- MAIN -->
+
 <div class="flex-1 flex flex-col">
 
 <div class="p-4 border-b border-white/20 bg-white/5">
 
 <h1 id="chatTitle"
 class="font-bold text-lg">
+
 New Chat
+
 </h1>
 
 </div>
 
 <div id="messages"
 class="flex-1 overflow-y-auto p-6 space-y-4">
+
 </div>
 
-<div class="p-4 border-t border-white/20 bg-white/5">
-
-<div class="flex space-x-3">
+<div class="p-4 border-t border-white/20 bg-white/5 flex space-x-3">
 
 <textarea
 id="messageInput"
 rows="1"
 placeholder="Send a message..."
-class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none">
-</textarea>
+class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none"></textarea>
 
 <button
 id="sendBtn"
@@ -119,11 +125,9 @@ class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 </div>
 
-</div>
-
 <script>
 
-/* ================= FIREBASE ================= */
+/* FIREBASE */
 
 const firebaseConfig = {
 apiKey: "AIzaSyCz5H-ad91O0FXsIev5V3ZY6x5TZ6mzr78",
@@ -143,39 +147,32 @@ const db = firebase.firestore();
 
 let chats = [];
 let activeChatId = null;
-let userId = null;
 let loggedIn = false;
+let userId = null;
 
 /* LOGIN */
 
 document.getElementById("loginBtn").onclick = () => {
-
-auth.signInWithPopup(
-new firebase.auth.GoogleAuthProvider()
-);
-
+auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 };
 
-document.getElementById("logoutBtn").onclick =
-() => auth.signOut();
+document.getElementById("logoutBtn").onclick = () => {
+auth.signOut();
+};
 
 /* AUTH */
 
 auth.onAuthStateChanged(user => {
 
-if (user) {
+if(user){
 
 loggedIn = true;
 userId = user.uid;
 
-document.getElementById("loginBtn")
-.classList.add("hidden");
+document.getElementById("loginBtn").classList.add("hidden");
+document.getElementById("logoutBtn").classList.remove("hidden");
 
-document.getElementById("logoutBtn")
-.classList.remove("hidden");
-
-document.getElementById("userName")
-.innerText = user.displayName;
+document.getElementById("userName").innerText = user.displayName;
 
 loadChats();
 
@@ -184,13 +181,12 @@ loadChats();
 else {
 
 loggedIn = false;
-userId = null;
 
 chats = [];
 activeChatId = null;
 
-document.getElementById("messages").innerHTML="";
-document.getElementById("chatList").innerHTML="";
+document.getElementById("messages").innerHTML = "";
+document.getElementById("chatList").innerHTML = "";
 
 }
 
@@ -204,7 +200,7 @@ db.collection("users")
 .doc(userId)
 .collection("chats")
 .get()
-.then(snapshot => {
+.then(snapshot=>{
 
 chats=[];
 
@@ -220,7 +216,7 @@ createNewChat();
 
 else{
 
-activeChatId=chats[0].id;
+activeChatId = chats[0].id;
 
 renderChatList();
 renderMessages();
@@ -235,9 +231,9 @@ renderMessages();
 
 function createNewChat(){
 
-const id=Date.now().toString();
+const id = Date.now().toString();
 
-const chat={
+const chat = {
 id,
 title:"New Chat",
 messages:[]
@@ -245,10 +241,9 @@ messages:[]
 
 chats.unshift(chat);
 
-activeChatId=id;
+activeChatId = id;
 
 saveChats();
-
 renderChatList();
 renderMessages();
 
@@ -278,9 +273,7 @@ document
 .getElementById("searchInput")
 .addEventListener("input",e=>{
 
-renderChatList(
-e.target.value.toLowerCase()
-);
+renderChatList(e.target.value.toLowerCase());
 
 });
 
@@ -288,14 +281,16 @@ e.target.value.toLowerCase()
 
 function renderChatList(search=""){
 
-const list=document.getElementById("chatList");
+const list =
+document.getElementById("chatList");
 
 list.innerHTML="";
 
 chats.forEach(chat=>{
 
 if(search &&
-!chat.title.toLowerCase().includes(search)) return;
+!chat.title.toLowerCase().includes(search))
+return;
 
 const item=document.createElement("div");
 
@@ -322,10 +317,9 @@ const menu=document.createElement("button");
 
 menu.innerHTML="<i class='fas fa-ellipsis-v'></i>";
 
-menu.onclick=e=>{
+menu.onclick=(e)=>{
 
 e.stopPropagation();
-
 showMenu(chat.id);
 
 };
@@ -348,19 +342,18 @@ const box=document.createElement("div");
 box.className=
 "fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
 
-/* RENAME */
-
 const rename=document.createElement("button");
 
 rename.innerText="Rename";
 
 rename.onclick=()=>{
 
-const newName=prompt("Enter new name:");
+const newName=prompt("New name:");
 
 if(newName){
 
-const chat=chats.find(c=>c.id===chatId);
+const chat=
+chats.find(c=>c.id===chatId);
 
 chat.title=newName;
 
@@ -373,15 +366,14 @@ box.remove();
 
 };
 
-/* DELETE */
-
 const del=document.createElement("button");
 
 del.innerText="Delete";
 
 del.onclick=()=>{
 
-chats=chats.filter(c=>c.id!==chatId);
+chats=
+chats.filter(c=>c.id!==chatId);
 
 saveChats();
 
@@ -392,37 +384,8 @@ box.remove();
 
 };
 
-/* EXPORT */
-
-const exp=document.createElement("button");
-
-exp.innerText="Export";
-
-exp.onclick=()=>{
-
-const chat=chats.find(c=>c.id===chatId);
-
-let text="";
-
-chat.messages.forEach(m=>{
-
-text+=m.role+": "+m.content+"\n\n";
-
-});
-
-const blob=new Blob([text]);
-
-const a=document.createElement("a");
-
-a.href=URL.createObjectURL(blob);
-
-a.download="chat.txt";
-
-a.click();
-
-};
-
-box.append(rename,del,exp);
+box.appendChild(rename);
+box.appendChild(del);
 
 document.body.appendChild(box);
 
@@ -430,30 +393,26 @@ setTimeout(()=>box.remove(),3000);
 
 }
 
-/* RENDER */
+/* AI MESSAGE */
 
-function renderMessages(){
+async function askAI(messages){
 
-const container=
-document.getElementById("messages");
-
-container.innerHTML="";
-
-const chat=
-chats.find(c=>c.id===activeChatId);
-
-if(!chat) return;
-
-chat.messages.forEach(m=>{
-
-addMessageToUI(
-m.role,
-m.content
+const res = await fetch(
+"http://localhost:3000/chat",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messages:messages
+})
+}
 );
 
-});
+const data = await res.json();
 
-scrollBottom();
+return data.reply;
 
 }
 
@@ -461,14 +420,15 @@ scrollBottom();
 
 async function sendMessage(){
 
-const input=
+const input =
 document.getElementById("messageInput");
 
-const text=input.value.trim();
+const text =
+input.value.trim();
 
 if(!text) return;
 
-const chat=
+const chat =
 chats.find(c=>c.id===activeChatId);
 
 chat.messages.push({
@@ -476,15 +436,9 @@ role:"user",
 content:text
 });
 
-if(chat.messages.length===1){
-
-chat.title=text.substring(0,20);
-
-}
+input.value="";
 
 renderMessages();
-
-input.value="";
 
 /* typing */
 
@@ -512,51 +466,15 @@ saveChats();
 
 }
 
-/* SERVER CALL */
-
-async function askAI(messages){
-
-try{
-
-const res =
-await fetch("http://localhost:3000/chat",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-messages:messages
-})
-
-});
-
-const data = await res.json();
-
-return data.reply || "No reply";
-
-}
-
-catch(err){
-
-console.error(err);
-
-return "Server error.";
-
-}
-
-}
-
 /* UI */
 
 function addMessageToUI(role,text,typing=false){
 
-const container=
+const container =
 document.getElementById("messages");
 
-const msg=document.createElement("div");
+const msg =
+document.createElement("div");
 
 msg.classList.add(
 "chat-bubble",
@@ -582,11 +500,8 @@ msg.classList.add(
 
 }
 
-if(typing){
-
+if(typing)
 msg.classList.add("typing");
-
-}
 
 msg.innerText=text;
 
@@ -594,14 +509,42 @@ container.appendChild(msg);
 
 }
 
+/* RENDER */
+
+function renderMessages(){
+
+const container =
+document.getElementById("messages");
+
+container.innerHTML="";
+
+const chat =
+chats.find(c=>c.id===activeChatId);
+
+if(!chat) return;
+
+chat.messages.forEach(m=>{
+
+addMessageToUI(
+m.role,
+m.content
+);
+
+});
+
+scrollBottom();
+
+}
+
 /* SCROLL */
 
 function scrollBottom(){
 
-const c=
+const c =
 document.getElementById("messages");
 
-c.scrollTop=c.scrollHeight;
+c.scrollTop =
+c.scrollHeight;
 
 }
 
