@@ -2,12 +2,14 @@
 <html lang="en">
 
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Quick Chat</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -17,6 +19,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
+
 .chat-bubble {
 animation: fadeIn 0.25s ease;
 }
@@ -30,6 +33,7 @@ to { opacity:1; transform: translateY(0); }
 opacity:0.6;
 font-style:italic;
 }
+
 </style>
 
 </head>
@@ -43,12 +47,14 @@ font-style:italic;
 
 <button id="newChatBtn"
 class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
-<i class="fas fa-plus mr-2"></i> New Chat
+<i class="fas fa-plus mr-2"></i>
+New Chat
 </button>
 
 <button id="loginBtn"
 class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-<i class="fab fa-google mr-2"></i> Login
+<i class="fab fa-google mr-2"></i>
+Login
 </button>
 
 <button id="logoutBtn"
@@ -61,12 +67,16 @@ class="text-sm text-gray-300 text-center"></div>
 
 </div>
 
-<input id="searchInput"
-class="mx-3 mt-3 p-2 rounded-lg bg-white/10 text-sm"
-placeholder="Search chats..."/>
+<input
+id="searchInput"
+type="text"
+placeholder="Search chats..."
+class="mx-3 mt-3 p-2 rounded-lg bg-white/10 border border-white/20 text-sm"
+/>
 
 <div id="chatList"
-class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+class="flex-1 overflow-y-auto p-3 space-y-2">
+</div>
 
 </div>
 
@@ -74,23 +84,38 @@ class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 <div class="flex-1 flex flex-col">
 
 <div class="p-4 border-b border-white/20 bg-white/5">
+
 <h1 id="chatTitle"
-class="font-bold text-lg">New Chat</h1>
+class="font-bold text-lg">
+New Chat
+</h1>
+
 </div>
 
 <div id="messages"
-class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+class="flex-1 overflow-y-auto p-6 space-y-4">
+</div>
 
-<div class="p-4 border-t border-white/20 bg-white/5 flex space-x-3">
+<div class="p-4 border-t border-white/20 bg-white/5">
 
-<textarea id="messageInput"
-class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20"
-placeholder="Send a message..."></textarea>
+<div class="flex space-x-3">
 
-<button id="sendBtn"
+<textarea
+id="messageInput"
+rows="1"
+placeholder="Send a message..."
+class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none">
+</textarea>
+
+<button
+id="sendBtn"
 class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
+
 <i class="fas fa-paper-plane"></i>
+
 </button>
+
+</div>
 
 </div>
 
@@ -98,7 +123,8 @@ class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
 <script>
 
-/* FIREBASE */
+/* ================= FIREBASE ================= */
+
 const firebaseConfig = {
 apiKey: "AIzaSyCz5H-ad91O0FXsIev5V3ZY6x5TZ6mzr78",
 authDomain: "aimodel-attempt4.firebaseapp.com",
@@ -114,61 +140,71 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* STATE */
-let chats=[];
-let activeChatId=null;
-let userId=null;
-let loggedIn=false;
+
+let chats = [];
+let activeChatId = null;
+let userId = null;
+let loggedIn = false;
 
 /* LOGIN */
-document.getElementById("loginBtn").onclick=()=>{
-auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+
+document.getElementById("loginBtn").onclick = () => {
+
+auth.signInWithPopup(
+new firebase.auth.GoogleAuthProvider()
+);
+
 };
 
-document.getElementById("logoutBtn").onclick=()=>{
-auth.signOut();
-};
+document.getElementById("logoutBtn").onclick =
+() => auth.signOut();
 
 /* AUTH */
-auth.onAuthStateChanged(user=>{
 
-if(user){
+auth.onAuthStateChanged(user => {
 
-loggedIn=true;
-userId=user.uid;
+if (user) {
 
-document.getElementById("loginBtn").classList.add("hidden");
-document.getElementById("logoutBtn").classList.remove("hidden");
+loggedIn = true;
+userId = user.uid;
 
-document.getElementById("userName").innerText=user.displayName;
+document.getElementById("loginBtn")
+.classList.add("hidden");
+
+document.getElementById("logoutBtn")
+.classList.remove("hidden");
+
+document.getElementById("userName")
+.innerText = user.displayName;
 
 loadChats();
+
 }
 
-else{
+else {
 
-loggedIn=false;
-userId=null;
-chats=[];
-activeChatId=null;
+loggedIn = false;
+userId = null;
+
+chats = [];
+activeChatId = null;
 
 document.getElementById("messages").innerHTML="";
 document.getElementById("chatList").innerHTML="";
-
-document.getElementById("loginBtn").classList.remove("hidden");
-document.getElementById("logoutBtn").classList.add("hidden");
 
 }
 
 });
 
 /* LOAD */
+
 function loadChats(){
 
 db.collection("users")
 .doc(userId)
 .collection("chats")
 .get()
-.then(snapshot=>{
+.then(snapshot => {
 
 chats=[];
 
@@ -181,6 +217,7 @@ if(chats.length===0){
 createNewChat();
 
 }
+
 else{
 
 activeChatId=chats[0].id;
@@ -195,25 +232,30 @@ renderMessages();
 }
 
 /* CREATE */
+
 function createNewChat(){
 
 const id=Date.now().toString();
 
-chats.unshift({
+const chat={
 id,
 title:"New Chat",
 messages:[]
-});
+};
+
+chats.unshift(chat);
 
 activeChatId=id;
 
 saveChats();
+
 renderChatList();
 renderMessages();
 
 }
 
 /* SAVE */
+
 function saveChats(){
 
 if(!loggedIn) return;
@@ -230,37 +272,62 @@ db.collection("users")
 
 }
 
+/* SEARCH */
+
+document
+.getElementById("searchInput")
+.addEventListener("input",e=>{
+
+renderChatList(
+e.target.value.toLowerCase()
+);
+
+});
+
 /* CHAT LIST */
-function renderChatList(){
+
+function renderChatList(search=""){
 
 const list=document.getElementById("chatList");
+
 list.innerHTML="";
 
 chats.forEach(chat=>{
 
+if(search &&
+!chat.title.toLowerCase().includes(search)) return;
+
 const item=document.createElement("div");
 
 item.className=
-"flex justify-between p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+"flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
 
 if(chat.id===activeChatId)
 item.classList.add("bg-white/20");
 
 const title=document.createElement("span");
+
 title.innerText=chat.title;
 
 title.onclick=()=>{
+
 activeChatId=chat.id;
+
 renderChatList();
 renderMessages();
+
 };
 
 const menu=document.createElement("button");
-menu.innerHTML="⋮";
 
-menu.onclick=(e)=>{
+menu.innerHTML="<i class='fas fa-ellipsis-v'></i>";
+
+menu.onclick=e=>{
+
 e.stopPropagation();
+
 showMenu(chat.id);
+
 };
 
 item.appendChild(title);
@@ -273,24 +340,29 @@ list.appendChild(item);
 }
 
 /* MENU */
-function showMenu(id){
+
+function showMenu(chatId){
 
 const box=document.createElement("div");
 
 box.className=
-"fixed bg-black p-2 rounded-lg space-y-2";
+"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
 
 /* RENAME */
+
 const rename=document.createElement("button");
+
 rename.innerText="Rename";
 
 rename.onclick=()=>{
 
-const n=prompt("New name:");
+const newName=prompt("Enter new name:");
 
-if(n){
+if(newName){
 
-chats.find(c=>c.id===id).title=n;
+const chat=chats.find(c=>c.id===chatId);
+
+chat.title=newName;
 
 saveChats();
 renderChatList();
@@ -302,13 +374,14 @@ box.remove();
 };
 
 /* DELETE */
+
 const del=document.createElement("button");
+
 del.innerText="Delete";
 
 del.onclick=()=>{
 
-chats=
-chats.filter(c=>c.id!==id);
+chats=chats.filter(c=>c.id!==chatId);
 
 saveChats();
 
@@ -319,7 +392,37 @@ box.remove();
 
 };
 
-box.append(rename,del);
+/* EXPORT */
+
+const exp=document.createElement("button");
+
+exp.innerText="Export";
+
+exp.onclick=()=>{
+
+const chat=chats.find(c=>c.id===chatId);
+
+let text="";
+
+chat.messages.forEach(m=>{
+
+text+=m.role+": "+m.content+"\n\n";
+
+});
+
+const blob=new Blob([text]);
+
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+
+a.download="chat.txt";
+
+a.click();
+
+};
+
+box.append(rename,del,exp);
 
 document.body.appendChild(box);
 
@@ -327,7 +430,8 @@ setTimeout(()=>box.remove(),3000);
 
 }
 
-/* MESSAGES */
+/* RENDER */
+
 function renderMessages(){
 
 const container=
@@ -342,38 +446,19 @@ if(!chat) return;
 
 chat.messages.forEach(m=>{
 
-addMsg(m.role,m.content);
+addMessageToUI(
+m.role,
+m.content
+);
 
 });
 
-scroll();
-
-}
-
-/* REAL AI CALL */
-async function askAI(messages){
-
-const res=await fetch("http://localhost:3000/api/chat",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-messages
-})
-
-});
-
-const data=await res.json();
-
-return data.reply;
+scrollBottom();
 
 }
 
 /* SEND */
+
 async function sendMessage(){
 
 const input=
@@ -391,16 +476,29 @@ role:"user",
 content:text
 });
 
-input.value="";
+if(chat.messages.length===1){
+
+chat.title=text.substring(0,20);
+
+}
 
 renderMessages();
 
-/* typing */
-addMsg("assistant","AI is typing...",true);
-scroll();
+input.value="";
 
-/* real AI */
-const reply=
+/* typing */
+
+addMessageToUI(
+"assistant",
+"AI is typing...",
+true
+);
+
+scrollBottom();
+
+/* REAL AI */
+
+const reply =
 await askAI(chat.messages);
 
 chat.messages.push({
@@ -409,49 +507,106 @@ content:reply
 });
 
 renderMessages();
+
 saveChats();
 
 }
 
-/* UI */
-function addMsg(role,text,typing=false){
+/* SERVER CALL */
 
-const box=
+async function askAI(messages){
+
+try{
+
+const res =
+await fetch("http://localhost:3000/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+messages:messages
+})
+
+});
+
+const data = await res.json();
+
+return data.reply || "No reply";
+
+}
+
+catch(err){
+
+console.error(err);
+
+return "Server error.";
+
+}
+
+}
+
+/* UI */
+
+function addMessageToUI(role,text,typing=false){
+
+const container=
 document.getElementById("messages");
 
-const div=
-document.createElement("div");
+const msg=document.createElement("div");
 
-div.className=
-"p-3 rounded-xl max-w-xl chat-bubble";
+msg.classList.add(
+"chat-bubble",
+"p-3",
+"rounded-xl",
+"max-w-xl"
+);
 
-if(role==="user")
-div.classList.add("ml-auto","bg-blue-500");
+if(role==="user"){
 
-else
-div.classList.add("bg-white/10");
+msg.classList.add(
+"ml-auto",
+"bg-blue-500"
+);
 
-if(typing)
-div.classList.add("typing");
+}
 
-div.innerText=text;
+else{
 
-box.appendChild(div);
+msg.classList.add(
+"bg-white/10"
+);
+
+}
+
+if(typing){
+
+msg.classList.add("typing");
+
+}
+
+msg.innerText=text;
+
+container.appendChild(msg);
 
 }
 
 /* SCROLL */
-function scroll(){
+
+function scrollBottom(){
 
 const c=
 document.getElementById("messages");
 
-c.scrollTop=
-c.scrollHeight;
+c.scrollTop=c.scrollHeight;
 
 }
 
 /* EVENTS */
+
 document
 .getElementById("newChatBtn")
 .onclick=createNewChat;
@@ -464,9 +619,10 @@ document
 .getElementById("messageInput")
 .addEventListener("keydown",e=>{
 
-if(e.key==="Enter" && !e.shiftKey){
+if(e.key==="Enter"&&!e.shiftKey){
 
 e.preventDefault();
+
 sendMessage();
 
 }
