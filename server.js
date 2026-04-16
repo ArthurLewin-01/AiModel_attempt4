@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 /* 🔑 PASTE YOUR GROQ API KEY HERE */
-const GROQ_API_KEY = "PASTE_YOUR_GROQ_API_KEY_HERE";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 /* CHAT ROUTE */
 
