@@ -36,11 +36,15 @@ headers: {
 "Content-Type": "application/json"
 },
 body: JSON.stringify({
-message: text
+messages: [
+{
+role: "user",
+content: text
+}
+]
 })
 }
 );
-
 const data = await response.json();
 
 
