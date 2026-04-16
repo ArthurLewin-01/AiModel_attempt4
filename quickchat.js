@@ -8,6 +8,8 @@ messageInput.value.trim();
 if (!text) return;
 
 
+// Show user message
+
 addMessage(text, "user");
 
 currentChat.push({
@@ -22,13 +24,12 @@ messageInput.value = "";
 
 addMessage("AI is typing...", "ai");
 
-
-// Send to server
-
 try {
 
+// Send request to YOUR Render server
+
 const response = await fetch(
-"https://ai-chat-server-ltfa.onrender.com/",
+"https://ai-chat-server-ltfa.onrender.com/chat",
 {
 method: "POST",
 headers: {
