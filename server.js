@@ -1,21 +1,22 @@
-import express from "express";
-import cors from "cors";
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-/* 🔑 PASTE YOUR GROQ API KEY HERE */
+// 🔑 Your Groq API key here
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-/* CHAT ROUTE */
-
+// Chat route
 app.post("/chat", async (req, res) => {
 
 try {
 
 const messages = req.body.messages;
+
+console.log("Received:", messages);
 
 const response = await fetch(
 "https://api.groq.com/openai/v1/chat/completions",
@@ -37,20 +38,18 @@ const data = await response.json();
 console.log("Groq Response:", data);
 
 if (!data.choices) {
-
 return res.json({
 reply: "AI error — check logs"
 });
-
 }
 
 res.json({
 reply: data.choices[0].message.content
 });
 
-} catch (err) {
+} catch (error) {
 
-console.log("SERVER ERROR:", err);
+console.error(error);
 
 res.json({
 reply: "Server error"
@@ -60,14 +59,8 @@ reply: "Server error"
 
 });
 
-/* TEST ROUTE */
+const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-res.send("Server running successfully");
-});
-
-/* START SERVER */
-
-app.listen(3000, () => {
-console.log("Server running on port 3000");
+app.listen(PORT, () => {
+console.log("Server running on port", PORT);
 });
