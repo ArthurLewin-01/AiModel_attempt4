@@ -152,13 +152,13 @@ let userId = null;
 
 /* LOGIN */
 
-document.getElementById("loginBtn").onclick = () => {
-auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-};
+document.getElementById("loginBtn").onclick =
+() => auth.signInWithPopup(
+new firebase.auth.GoogleAuthProvider()
+);
 
-document.getElementById("logoutBtn").onclick = () => {
-auth.signOut();
-};
+document.getElementById("logoutBtn").onclick =
+() => auth.signOut();
 
 /* AUTH */
 
@@ -172,7 +172,8 @@ userId = user.uid;
 document.getElementById("loginBtn").classList.add("hidden");
 document.getElementById("logoutBtn").classList.remove("hidden");
 
-document.getElementById("userName").innerText = user.displayName;
+document.getElementById("userName").innerText =
+user.displayName;
 
 loadChats();
 
@@ -267,138 +268,12 @@ db.collection("users")
 
 }
 
-/* SEARCH */
-
-document
-.getElementById("searchInput")
-.addEventListener("input",e=>{
-
-renderChatList(e.target.value.toLowerCase());
-
-});
-
-/* CHAT LIST */
-
-function renderChatList(search=""){
-
-const list =
-document.getElementById("chatList");
-
-list.innerHTML="";
-
-chats.forEach(chat=>{
-
-if(search &&
-!chat.title.toLowerCase().includes(search))
-return;
-
-const item=document.createElement("div");
-
-item.className=
-"flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
-
-if(chat.id===activeChatId)
-item.classList.add("bg-white/20");
-
-const title=document.createElement("span");
-
-title.innerText=chat.title;
-
-title.onclick=()=>{
-
-activeChatId=chat.id;
-
-renderChatList();
-renderMessages();
-
-};
-
-const menu=document.createElement("button");
-
-menu.innerHTML="<i class='fas fa-ellipsis-v'></i>";
-
-menu.onclick=(e)=>{
-
-e.stopPropagation();
-showMenu(chat.id);
-
-};
-
-item.appendChild(title);
-item.appendChild(menu);
-
-list.appendChild(item);
-
-});
-
-}
-
-/* MENU */
-
-function showMenu(chatId){
-
-const box=document.createElement("div");
-
-box.className=
-"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
-
-const rename=document.createElement("button");
-
-rename.innerText="Rename";
-
-rename.onclick=()=>{
-
-const newName=prompt("New name:");
-
-if(newName){
-
-const chat=
-chats.find(c=>c.id===chatId);
-
-chat.title=newName;
-
-saveChats();
-renderChatList();
-
-}
-
-box.remove();
-
-};
-
-const del=document.createElement("button");
-
-del.innerText="Delete";
-
-del.onclick=()=>{
-
-chats=
-chats.filter(c=>c.id!==chatId);
-
-saveChats();
-
-renderChatList();
-renderMessages();
-
-box.remove();
-
-};
-
-box.appendChild(rename);
-box.appendChild(del);
-
-document.body.appendChild(box);
-
-setTimeout(()=>box.remove(),3000);
-
-}
-
 /* AI CALL */
 
 async function askAI(messages){
 
 const res = await fetch(
-"http://localhost:3000/chat",
+"https://ai-chat-server-ltfa.onrender.com/chat",
 {
 method:"POST",
 headers:{
@@ -447,8 +322,6 @@ addMessageToUI(
 "AI is typing...",
 true
 );
-
-scrollBottom();
 
 /* REAL AI */
 
@@ -574,7 +447,5 @@ sendMessage();
 
 </script>
 
-<script src="quickchat.js"></script>
-  
 </body>
 </html>
