@@ -28,11 +28,6 @@ from { opacity:0; transform: translateY(10px); }
 to { opacity:1; transform: translateY(0); }
 }
 
-.typing {
-opacity:0.6;
-font-style:italic;
-}
-
 </style>
 
 </head>
@@ -41,21 +36,22 @@ font-style:italic;
 
 <!-- SIDEBAR -->
 
-<div class="w-[260px] bg-white/10 backdrop-blur-md border-r border-white/20 flex flex-col">
+<div class="w-[260px] bg-white/10 border-r border-white/20 flex flex-col">
 
-<div class="p-4 border-b border-white/20 space-y-3">
+<div class="p-4 space-y-3">
 
 <button id="newChatBtn"
 class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
 
-<i class="fas fa-plus mr-2"></i> New Chat
+<i class="fas fa-plus mr-2"></i>
+New Chat
 
 </button>
 
 <button id="loginBtn"
-class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
+class="w-full p-3 rounded-xl bg-blue-600">
 
-<i class="fab fa-google mr-2"></i> Login
+Login
 
 </button>
 
@@ -71,13 +67,6 @@ class="text-sm text-gray-300 text-center"></div>
 
 </div>
 
-<input
-id="searchInput"
-type="text"
-placeholder="Search chats..."
-class="mx-3 mt-3 p-2 rounded-lg bg-white/10 border border-white/20 text-sm"
-/>
-
 <div id="chatList"
 class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
@@ -87,33 +76,22 @@ class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
 <div class="flex-1 flex flex-col">
 
-<div class="p-4 border-b border-white/20 bg-white/5">
-
-<h1 id="chatTitle"
-class="font-bold text-lg">
-
-New Chat
-
-</h1>
-
-</div>
-
 <div id="messages"
 class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
-<div class="p-4 border-t border-white/20 bg-white/5 flex space-x-3">
+<div class="p-4 flex space-x-3">
 
 <textarea
 id="messageInput"
 rows="1"
 placeholder="Send a message..."
-class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none"></textarea>
+class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20"></textarea>
 
 <button
 id="sendBtn"
-class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
+class="px-5 py-3 rounded-xl bg-blue-600">
 
-<i class="fas fa-paper-plane"></i>
+Send
 
 </button>
 
@@ -140,7 +118,6 @@ const db = firebase.firestore();
 
 let chats=[];
 let activeChatId=null;
-let loggedIn=false;
 let userId=null;
 
 /* LOGIN */
@@ -159,7 +136,6 @@ auth.onAuthStateChanged(user=>{
 
 if(user){
 
-loggedIn=true;
 userId=user.uid;
 
 loginBtn.classList.add("hidden");
@@ -201,11 +177,12 @@ renderMessages();
 
 }
 
-/* CREATE CHAT */
+/* NEW CHAT */
 
 function createNewChat(){
 
-const id=Date.now().toString();
+const id=
+Date.now().toString();
 
 const chat={
 id,
@@ -230,8 +207,6 @@ newChatBtn.onclick=createNewChat;
 
 function saveChats(){
 
-if(!loggedIn) return;
-
 chats.forEach(chat=>{
 
 db.collection("users")
@@ -244,28 +219,16 @@ db.collection("users")
 
 }
 
-/* SEARCH */
+/* CHAT LIST */
 
-searchInput.addEventListener(
-"input",
-e=>renderChatList(
-e.target.value.toLowerCase()
-)
-);
-
-/* LIST */
-
-function renderChatList(search=""){
+function renderChatList(){
 
 chatList.innerHTML="";
 
 chats.forEach(chat=>{
 
-if(search &&
-!chat.title.toLowerCase().includes(search))
-return;
-
-const item=document.createElement("div");
+const item=
+document.createElement("div");
 
 item.className=
 "flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
@@ -273,23 +236,36 @@ item.className=
 if(chat.id===activeChatId)
 item.classList.add("bg-white/20");
 
-const title=document.createElement("span");
+/* TITLE */
+
+const title=
+document.createElement("span");
 
 title.innerText=chat.title;
 
 title.onclick=()=>{
+
 activeChatId=chat.id;
+
 renderChatList();
 renderMessages();
+
 };
 
-const menu=document.createElement("button");
+/* MENU BUTTON */
 
-menu.innerHTML="<i class='fas fa-ellipsis-v'></i>";
+const menu=
+document.createElement("button");
+
+menu.innerHTML=
+"<i class='fas fa-ellipsis-v'></i>";
 
 menu.onclick=(e)=>{
+
 e.stopPropagation();
-showMenu(chat.id);
+
+showMenu(chat.id,e);
+
 };
 
 item.appendChild(title);
@@ -301,27 +277,50 @@ chatList.appendChild(item);
 
 }
 
-/* MENU */
+/* MENU FIX */
 
-function showMenu(chatId){
+function showMenu(chatId,event){
 
-const box=document.createElement("div");
+const old=
+document.getElementById("chatMenu");
+
+if(old) old.remove();
+
+const box=
+document.createElement("div");
+
+box.id="chatMenu";
 
 box.className=
-"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
+"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2 z-50";
 
-const rename=document.createElement("button");
+box.style.top=
+event.clientY+"px";
+
+box.style.left=
+event.clientX+"px";
+
+/* RENAME */
+
+const rename=
+document.createElement("button");
 
 rename.innerText="Rename";
 
+rename.className=
+"block w-full text-left hover:bg-white/20 p-2 rounded";
+
 rename.onclick=()=>{
 
-const newName=prompt("New name:");
+const newName=
+prompt("Enter new name:");
 
 if(newName){
 
 const chat=
-chats.find(c=>c.id===chatId);
+chats.find(
+c=>c.id===chatId
+);
 
 chat.title=newName;
 
@@ -334,17 +333,27 @@ box.remove();
 
 };
 
-const del=document.createElement("button");
+/* DELETE */
+
+const del=
+document.createElement("button");
 
 del.innerText="Delete";
+
+del.className=
+"block w-full text-left hover:bg-red-500/30 p-2 rounded";
 
 del.onclick=()=>{
 
 chats=
-chats.filter(c=>c.id!==chatId);
+chats.filter(
+c=>c.id!==chatId
+);
 
 if(chats.length>0)
 activeChatId=chats[0].id;
+else
+createNewChat();
 
 saveChats();
 
@@ -359,76 +368,21 @@ box.append(rename,del);
 
 document.body.appendChild(box);
 
-setTimeout(()=>box.remove(),3000);
+/* CLOSE ON CLICK */
 
-}
+setTimeout(()=>{
 
-/* AI */
-
-async function askAI(messages){
-
-const res=await fetch(
-"https://ai-chat-server-ltfa.onrender.com/chat",
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({messages})
-}
+document.addEventListener(
+"click",
+()=>box.remove(),
+{once:true}
 );
 
-const data=await res.json();
-
-return data.reply;
+},50);
 
 }
 
-/* SEND */
-
-async function sendMessage(){
-
-const text=
-messageInput.value.trim();
-
-if(!text) return;
-
-const chat=
-chats.find(c=>c.id===activeChatId);
-
-chat.messages.push({
-role:"user",
-content:text
-});
-
-messageInput.value="";
-
-renderMessages();
-
-addBubble(
-"assistant",
-"AI is typing..."
-);
-
-const reply=
-await askAI(chat.messages);
-
-messages.removeChild(
-messages.lastChild
-);
-
-chat.messages.push({
-role:"assistant",
-content:reply
-});
-
-renderMessages();
-
-saveChats();
-
-}
-
-/* UI */
+/* MESSAGE UI */
 
 function addBubble(role,text){
 
@@ -458,13 +412,103 @@ function renderMessages(){
 messages.innerHTML="";
 
 const chat=
-chats.find(c=>c.id===activeChatId);
+chats.find(
+c=>c.id===activeChatId
+);
 
 if(!chat) return;
 
 chat.messages.forEach(m=>{
-addBubble(m.role,m.content);
+
+addBubble(
+m.role,
+m.content
+);
+
 });
+
+}
+
+/* AI CALL */
+
+async function askAI(messagesData){
+
+const res=
+await fetch(
+"https://ai-chat-server-ltfa.onrender.com/chat",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messages:messagesData
+})
+}
+);
+
+const data=
+await res.json();
+
+return data.reply;
+
+}
+
+/* SEND */
+
+async function sendMessage(){
+
+const text=
+messageInput.value.trim();
+
+if(!text) return;
+
+const chat=
+chats.find(
+c=>c.id===activeChatId
+);
+
+/* USER */
+
+chat.messages.push({
+role:"user",
+content:text
+});
+
+messageInput.value="";
+
+renderMessages();
+
+/* TYPING */
+
+addBubble(
+"assistant",
+"AI is typing..."
+);
+
+/* AI */
+
+const reply=
+await askAI(
+chat.messages
+);
+
+/* REMOVE typing */
+
+messages.removeChild(
+messages.lastChild
+);
+
+/* ADD AI */
+
+chat.messages.push({
+role:"assistant",
+content:reply
+});
+
+renderMessages();
+
+saveChats();
 
 }
 
@@ -485,9 +529,11 @@ messageInput.addEventListener(
 "keydown",
 e=>{
 
-if(e.key==="Enter"&&!e.shiftKey){
+if(e.key==="Enter"
+&&!e.shiftKey){
 
 e.preventDefault();
+
 sendMessage();
 
 }
