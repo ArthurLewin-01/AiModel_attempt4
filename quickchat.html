@@ -200,34 +200,37 @@ chats.push(doc.data());
 if(chats.length===0){
 createNewChat();
 }
-
 else{
 activeChatId = chats[0].id;
+}
+
 renderChatList();
 renderMessages();
-}
 
 });
 
 }
 
-/* CREATE */
+/* CREATE NEW CHAT */
 
 function createNewChat(){
 
 const id = Date.now().toString();
 
-chats.unshift({
-id,
-title:"New Chat",
-messages:[]
-});
+const newChat = {
+id: id,
+title: "New Chat",
+messages: []
+};
+
+chats.unshift(newChat);
 
 activeChatId = id;
 
-saveChats();
 renderChatList();
 renderMessages();
+
+saveChats();
 
 }
 
@@ -244,6 +247,42 @@ db.collection("users")
 .collection("chats")
 .doc(chat.id)
 .set(chat);
+
+});
+
+}
+
+/* RENDER CHAT LIST */
+
+function renderChatList(){
+
+const list =
+document.getElementById("chatList");
+
+list.innerHTML="";
+
+chats.forEach(chat=>{
+
+const item=document.createElement("div");
+
+item.className=
+"p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+
+if(chat.id===activeChatId)
+item.classList.add("bg-white/20");
+
+item.innerText=chat.title;
+
+item.onclick=()=>{
+
+activeChatId=chat.id;
+
+renderChatList();
+renderMessages();
+
+};
+
+list.appendChild(item);
 
 });
 
@@ -272,7 +311,7 @@ return data.reply;
 
 }
 
-/* SEND */
+/* SEND MESSAGE */
 
 async function sendMessage(){
 
@@ -287,6 +326,10 @@ if(!text) return;
 const chat =
 chats.find(c=>c.id===activeChatId);
 
+if(!chat) return;
+
+/* USER */
+
 chat.messages.push({
 role:"user",
 content:text
@@ -296,14 +339,24 @@ input.value="";
 
 renderMessages();
 
+/* typing */
+
 addMessageToUI(
 "assistant",
 "AI is typing...",
 true
 );
 
+/* AI */
+
 const reply =
 await askAI(chat.messages);
+
+/* remove typing */
+
+chat.messages.pop();
+
+/* assistant */
 
 chat.messages.push({
 role:"assistant",
@@ -316,9 +369,9 @@ saveChats();
 
 }
 
-/* UI */
+/* ADD MESSAGE UI */
 
-function addMessageToUI(role,text,typing=false){
+function addMessageToUI(role,text){
 
 const container =
 document.getElementById("messages");
@@ -336,13 +389,9 @@ msg.classList.add(
 if(role==="user"){
 msg.classList.add("ml-auto","bg-blue-500");
 }
-
 else{
 msg.classList.add("bg-white/10");
 }
-
-if(typing)
-msg.classList.add("typing");
 
 msg.innerText=text;
 
@@ -350,7 +399,7 @@ container.appendChild(msg);
 
 }
 
-/* RENDER */
+/* RENDER MESSAGES */
 
 function renderMessages(){
 
