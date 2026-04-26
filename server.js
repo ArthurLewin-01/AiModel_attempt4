@@ -6,10 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔑 Your Groq API key here
+/* API KEY from Render */
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-// Chat route
+/* CHAT ROUTE */
+
 app.post("/chat", async (req, res) => {
 
 try {
@@ -38,9 +39,11 @@ const data = await response.json();
 console.log("Groq Response:", data);
 
 if (!data.choices) {
+
 return res.json({
 reply: "AI error — check logs"
 });
+
 }
 
 res.json({
@@ -49,7 +52,7 @@ reply: data.choices[0].message.content
 
 } catch (error) {
 
-console.error(error);
+console.error("Server error:", error);
 
 res.json({
 reply: "Server error"
@@ -59,8 +62,12 @@ reply: "Server error"
 
 });
 
+/* START SERVER */
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
+
 console.log("Server running on port", PORT);
+
 });
