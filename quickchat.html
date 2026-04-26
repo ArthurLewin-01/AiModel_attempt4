@@ -26,7 +26,11 @@ animation: fadeIn 0.25s ease;
 @keyframes fadeIn {
 from { opacity:0; transform: translateY(10px); }
 to { opacity:1; transform: translateY(0); }
+}
 
+.typing {
+opacity:0.6;
+font-style:italic;
 }
 
 </style>
@@ -37,21 +41,21 @@ to { opacity:1; transform: translateY(0); }
 
 <!-- SIDEBAR -->
 
-<div class="w-[260px] bg-white/10 border-r border-white/20 flex flex-col">
+<div class="w-[260px] bg-white/10 backdrop-blur-md border-r border-white/20 flex flex-col">
 
-<div class="p-4 space-y-3">
+<div class="p-4 border-b border-white/20 space-y-3">
 
 <button id="newChatBtn"
 class="w-full p-3 rounded-xl border border-white/30 hover:bg-white/20">
 
-+ New Chat
+<i class="fas fa-plus mr-2"></i> New Chat
 
 </button>
 
 <button id="loginBtn"
-class="w-full p-3 rounded-xl bg-blue-600">
+class="w-full p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
-Login
+<i class="fab fa-google mr-2"></i> Login
 
 </button>
 
@@ -67,10 +71,15 @@ class="text-sm text-gray-300 text-center"></div>
 
 </div>
 
-<div id="chatList"
-class="flex-1 overflow-y-auto p-3 space-y-2">
+<input
+id="searchInput"
+type="text"
+placeholder="Search chats..."
+class="mx-3 mt-3 p-2 rounded-lg bg-white/10 border border-white/20 text-sm"
+/>
 
-</div>
+<div id="chatList"
+class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
 </div>
 
@@ -78,24 +87,33 @@ class="flex-1 overflow-y-auto p-3 space-y-2">
 
 <div class="flex-1 flex flex-col">
 
-<div id="messages"
-class="flex-1 overflow-y-auto p-6 space-y-4">
+<div class="p-4 border-b border-white/20 bg-white/5">
+
+<h1 id="chatTitle"
+class="font-bold text-lg">
+
+New Chat
+
+</h1>
 
 </div>
 
-<div class="p-4 flex space-x-3">
+<div id="messages"
+class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+<div class="p-4 border-t border-white/20 bg-white/5 flex space-x-3">
 
 <textarea
 id="messageInput"
 rows="1"
 placeholder="Send a message..."
-class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20"></textarea>
+class="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 resize-none"></textarea>
 
 <button
 id="sendBtn"
-class="px-5 py-3 rounded-xl bg-blue-600">
+class="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
 
-Send
+<i class="fas fa-paper-plane"></i>
 
 </button>
 
@@ -120,33 +138,34 @@ const db = firebase.firestore();
 
 /* STATE */
 
-let chats = [];
-let activeChatId = null;
-let userId = null;
+let chats=[];
+let activeChatId=null;
+let loggedIn=false;
+let userId=null;
 
 /* LOGIN */
 
-loginBtn.onclick =
-() => auth.signInWithPopup(
+loginBtn.onclick=
+()=>auth.signInWithPopup(
 new firebase.auth.GoogleAuthProvider()
 );
 
-logoutBtn.onclick =
-() => auth.signOut();
+logoutBtn.onclick=
+()=>auth.signOut();
 
 /* AUTH */
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(user=>{
 
 if(user){
 
-userId = user.uid;
+loggedIn=true;
+userId=user.uid;
 
 loginBtn.classList.add("hidden");
 logoutBtn.classList.remove("hidden");
 
-userName.innerText =
-user.displayName;
+userName.innerText=user.displayName;
 
 loadChats();
 
@@ -170,16 +189,10 @@ snapshot.forEach(doc=>{
 chats.push(doc.data());
 });
 
-if(chats.length===0){
-
+if(chats.length===0)
 createNewChat();
-
-}
-else{
-
-activeChatId = chats[0].id;
-
-}
+else
+activeChatId=chats[0].id;
 
 renderChatList();
 renderMessages();
@@ -188,19 +201,16 @@ renderMessages();
 
 }
 
-/* NEW CHAT */
+/* CREATE CHAT */
 
 function createNewChat(){
 
-const id =
-Date.now().toString();
+const id=Date.now().toString();
 
-const chat = {
-
-id:id,
+const chat={
+id,
 title:"New Chat",
 messages:[]
-
 };
 
 chats.unshift(chat);
@@ -220,6 +230,8 @@ newChatBtn.onclick=createNewChat;
 
 function saveChats(){
 
+if(!loggedIn) return;
+
 chats.forEach(chat=>{
 
 db.collection("users")
@@ -232,29 +244,56 @@ db.collection("users")
 
 }
 
+/* SEARCH */
+
+searchInput.addEventListener(
+"input",
+e=>renderChatList(
+e.target.value.toLowerCase()
+)
+);
+
 /* LIST */
 
-function renderChatList(){
+function renderChatList(search=""){
 
 chatList.innerHTML="";
 
 chats.forEach(chat=>{
 
-const item =
-document.createElement("div");
+if(search &&
+!chat.title.toLowerCase().includes(search))
+return;
+
+const item=document.createElement("div");
 
 item.className=
-"p-3 rounded-lg hover:bg-white/20 cursor-pointer";
+"flex justify-between items-center p-3 rounded-lg hover:bg-white/20 cursor-pointer";
 
-item.innerText=chat.title;
+if(chat.id===activeChatId)
+item.classList.add("bg-white/20");
 
-item.onclick=()=>{
+const title=document.createElement("span");
 
+title.innerText=chat.title;
+
+title.onclick=()=>{
 activeChatId=chat.id;
-
+renderChatList();
 renderMessages();
-
 };
+
+const menu=document.createElement("button");
+
+menu.innerHTML="<i class='fas fa-ellipsis-v'></i>";
+
+menu.onclick=(e)=>{
+e.stopPropagation();
+showMenu(chat.id);
+};
+
+item.appendChild(title);
+item.appendChild(menu);
 
 chatList.appendChild(item);
 
@@ -262,86 +301,84 @@ chatList.appendChild(item);
 
 }
 
-/* UI MESSAGE */
+/* MENU */
 
-function addBubble(role,text){
+function showMenu(chatId){
 
-const msg =
-document.createElement("div");
+const box=document.createElement("div");
 
-msg.className =
-"chat-bubble p-3 rounded-xl max-w-xl";
+box.className=
+"fixed bg-black border border-white/20 p-2 rounded-lg space-y-2";
 
-if(role==="user"){
+const rename=document.createElement("button");
 
-msg.classList.add(
-"ml-auto",
-"bg-blue-500"
-);
+rename.innerText="Rename";
 
-}
+rename.onclick=()=>{
 
-else{
+const newName=prompt("New name:");
 
-msg.classList.add(
-"bg-white/10"
-);
+if(newName){
 
-}
+const chat=
+chats.find(c=>c.id===chatId);
 
-msg.innerText=text;
+chat.title=newName;
 
-messages.appendChild(msg);
-
-messages.scrollTop =
-messages.scrollHeight;
+saveChats();
+renderChatList();
 
 }
 
-/* RENDER */
+box.remove();
 
-function renderMessages(){
+};
 
-messages.innerHTML="";
+const del=document.createElement("button");
 
-const chat =
-chats.find(
-c=>c.id===activeChatId
-);
+del.innerText="Delete";
 
-if(!chat) return;
+del.onclick=()=>{
 
-chat.messages.forEach(m=>{
+chats=
+chats.filter(c=>c.id!==chatId);
 
-addBubble(
-m.role,
-m.content
-);
+if(chats.length>0)
+activeChatId=chats[0].id;
 
-});
+saveChats();
+
+renderChatList();
+renderMessages();
+
+box.remove();
+
+};
+
+box.append(rename,del);
+
+document.body.appendChild(box);
+
+setTimeout(()=>box.remove(),3000);
 
 }
 
-/* AI CALL */
+/* AI */
 
-async function askAI(messagesData){
+async function askAI(messages){
 
-const res =
-await fetch(
+const res=await fetch(
 "https://ai-chat-server-ltfa.onrender.com/chat",
 {
 method:"POST",
 headers:{
 "Content-Type":"application/json"
 },
-body:JSON.stringify({
-messages:messagesData
-})
+body:JSON.stringify({messages})
 }
 );
 
-const data =
-await res.json();
+const data=await res.json();
 
 return data.reply;
 
@@ -351,58 +388,38 @@ return data.reply;
 
 async function sendMessage(){
 
-const text =
+const text=
 messageInput.value.trim();
 
 if(!text) return;
 
-const chat =
-chats.find(
-c=>c.id===activeChatId
-);
-
-if(!chat) return;
-
-/* USER SHOW FIRST */
+const chat=
+chats.find(c=>c.id===activeChatId);
 
 chat.messages.push({
-
 role:"user",
 content:text
-
 });
-
-renderMessages();
 
 messageInput.value="";
 
-/* TYPING */
+renderMessages();
 
 addBubble(
 "assistant",
 "AI is typing..."
 );
 
-/* AI */
-
-const reply =
-await askAI(
-chat.messages
-);
-
-/* REMOVE typing */
+const reply=
+await askAI(chat.messages);
 
 messages.removeChild(
 messages.lastChild
 );
 
-/* ADD AI */
-
 chat.messages.push({
-
 role:"assistant",
 content:reply
-
 });
 
 renderMessages();
@@ -411,13 +428,64 @@ saveChats();
 
 }
 
+/* UI */
+
+function addBubble(role,text){
+
+const msg=
+document.createElement("div");
+
+msg.className=
+"chat-bubble p-3 rounded-xl max-w-xl";
+
+if(role==="user")
+msg.classList.add("ml-auto","bg-blue-500");
+else
+msg.classList.add("bg-white/10");
+
+msg.innerText=text;
+
+messages.appendChild(msg);
+
+scrollBottom();
+
+}
+
+/* RENDER */
+
+function renderMessages(){
+
+messages.innerHTML="";
+
+const chat=
+chats.find(c=>c.id===activeChatId);
+
+if(!chat) return;
+
+chat.messages.forEach(m=>{
+addBubble(m.role,m.content);
+});
+
+}
+
+/* SCROLL */
+
+function scrollBottom(){
+
+messages.scrollTop=
+messages.scrollHeight;
+
+}
+
+/* EVENTS */
+
 sendBtn.onclick=sendMessage;
 
 messageInput.addEventListener(
 "keydown",
 e=>{
 
-if(e.key==="Enter"){
+if(e.key==="Enter"&&!e.shiftKey){
 
 e.preventDefault();
 sendMessage();
