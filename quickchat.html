@@ -179,18 +179,6 @@ loadChats();
 
 }
 
-else {
-
-loggedIn = false;
-
-chats = [];
-activeChatId = null;
-
-document.getElementById("messages").innerHTML = "";
-document.getElementById("chatList").innerHTML = "";
-
-}
-
 });
 
 /* LOAD */
@@ -210,18 +198,13 @@ chats.push(doc.data());
 });
 
 if(chats.length===0){
-
 createNewChat();
-
 }
 
 else{
-
 activeChatId = chats[0].id;
-
 renderChatList();
 renderMessages();
-
 }
 
 });
@@ -234,13 +217,11 @@ function createNewChat(){
 
 const id = Date.now().toString();
 
-const chat = {
+chats.unshift({
 id,
 title:"New Chat",
 messages:[]
-};
-
-chats.unshift(chat);
+});
 
 activeChatId = id;
 
@@ -315,15 +296,11 @@ input.value="";
 
 renderMessages();
 
-/* typing */
-
 addMessageToUI(
 "assistant",
 "AI is typing...",
 true
 );
-
-/* REAL AI */
 
 const reply =
 await askAI(chat.messages);
@@ -357,20 +334,11 @@ msg.classList.add(
 );
 
 if(role==="user"){
-
-msg.classList.add(
-"ml-auto",
-"bg-blue-500"
-);
-
+msg.classList.add("ml-auto","bg-blue-500");
 }
 
 else{
-
-msg.classList.add(
-"bg-white/10"
-);
-
+msg.classList.add("bg-white/10");
 }
 
 if(typing)
@@ -397,12 +365,7 @@ chats.find(c=>c.id===activeChatId);
 if(!chat) return;
 
 chat.messages.forEach(m=>{
-
-addMessageToUI(
-m.role,
-m.content
-);
-
+addMessageToUI(m.role,m.content);
 });
 
 scrollBottom();
@@ -438,7 +401,6 @@ document
 if(e.key==="Enter"&&!e.shiftKey){
 
 e.preventDefault();
-
 sendMessage();
 
 }
