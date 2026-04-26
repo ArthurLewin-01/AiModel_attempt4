@@ -311,7 +311,7 @@ return data.reply;
 
 }
 
-/* SEND MESSAGE */
+/* SEND MESSAGE — FINAL FIXED */
 
 async function sendMessage(){
 
@@ -328,7 +328,7 @@ chats.find(c=>c.id===activeChatId);
 
 if(!chat) return;
 
-/* USER */
+/* USER MESSAGE */
 
 chat.messages.push({
 role:"user",
@@ -339,24 +339,21 @@ input.value="";
 
 renderMessages();
 
-/* typing */
+/* SHOW TYPING VISUAL */
 
 addMessageToUI(
 "assistant",
-"AI is typing...",
-true
+"AI is typing..."
 );
 
-/* AI */
+scrollBottom();
+
+/* CALL AI */
 
 const reply =
 await askAI(chat.messages);
 
-/* remove typing */
-
-chat.messages.pop();
-
-/* assistant */
+/* ADD AI MESSAGE */
 
 chat.messages.push({
 role:"assistant",
@@ -369,7 +366,7 @@ saveChats();
 
 }
 
-/* ADD MESSAGE UI */
+/* UI */
 
 function addMessageToUI(role,text){
 
